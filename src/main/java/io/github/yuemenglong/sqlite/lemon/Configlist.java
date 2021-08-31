@@ -2,8 +2,6 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.common.INext;
 
-import java.util.function.Supplier;
-
 public class Configlist {
     private static Config freelist = null;      /* List of free configurations */
     private static Config current = null;       /* Top of list of configurations */
@@ -22,34 +20,21 @@ public class Configlist {
         freelist = freelist.next;
         return new_;
     }
-    //
-    ///* Return a pointer to a new configuration */
-    //PRIVATE struct config *newconfig(){
-    //  struct config *new;
-    //  if( freelist==0 ){
-    //    int i;
-    //    int amt = 3;
-    //    freelist = (struct config *)malloc( sizeof(struct config)*amt );
-    //    if( freelist==0 ){
-    //      fprintf(stderr,"Unable to allocate memory for a new configuration.");
-    //      exit(1);
-    //    }
-    //    for(i=0; i<amt-1; i++) freelist[i].next = &freelist[i+1];
-    //    freelist[amt-1].next = 0;
-    //  }
-    //  new = freelist;
-    //  freelist = freelist->next;
-    //  return new;
-    //}
-    //
-    ///* The configuration "old" is no longer used */
-    //PRIVATE void deleteconfig(old)
-    //struct config *old;
-    //{
-    //  old->next = freelist;
-    //  freelist = old;
-    //}
-    //
+
+    public static void deleteConfig(Config old) {
+        old.next = freelist;
+        freelist = old;
+    }
+
+    public static void configlistInit() {
+        current = null;
+        currentend = new Config[]{current};
+        basis = null;
+        basisend = new Config[]{basis};
+        // TODO
+//        configtableInit();
+    }
+
     ///* Initialized the configuration list builder */
     //void Configlist_init(){
     //  current = 0;
