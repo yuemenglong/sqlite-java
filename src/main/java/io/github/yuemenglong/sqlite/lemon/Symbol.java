@@ -6,7 +6,7 @@ public class Symbol {
         NONTERMINAL
     }
 
-    public enum SymbleEAssoc {
+    public enum SymbleAssoc {
         LEFT,
         RIGHT,
         NONE,
@@ -18,8 +18,8 @@ public class Symbol {
     public SymbolType type;
     public Rule rule;
     int prec;
-    SymbleEAssoc assoc;
-    String firstset;          /* First-set for all rules of this symbol */
+    SymbleAssoc assoc;
+    byte[] firstset;          /* First-set for all rules of this symbol */
     boolean lambda;          /* True if NT and can generate an empty string */
     String destructor;        /* Code which executes whenever this symbol is
      ** popped from the stack during error processing */

@@ -1,6 +1,23 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-public class Config {
+import io.github.yuemenglong.sqlite.common.INode;
+
+public class Config implements INode<Config> {
+    @Override
+    public Config getNext() {
+        return next;
+    }
+
+    @Override
+    public void setNext(Config v) {
+        next = v;
+    }
+
+    @Override
+    public int compareTo(Config o) {
+        return 0;
+    }
+
     public enum ConfigStatus {
         COMPLETE,              /* The status is used during followset and */
         INCOMPLETE             /*    shift computations */

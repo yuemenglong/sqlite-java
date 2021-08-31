@@ -1,9 +1,13 @@
 package io.github.yuemenglong.sqlite.lemon;
 
+import io.github.yuemenglong.sqlite.common.INext;
 import io.github.yuemenglong.sqlite.common.INode;
 import io.github.yuemenglong.sqlite.util.Assert;
 
+import java.util.function.Supplier;
+
 import static io.github.yuemenglong.sqlite.lemon.Action.ActionType.REDUCE;
+import static io.github.yuemenglong.sqlite.lemon.Action.ActionType.SHIFT;
 
 public class Action implements INode<Action> {
     public int compareTo(Action o) {
@@ -18,20 +22,9 @@ public class Action implements INode<Action> {
         next = v;
     }
 
-    public static class ActionUnionX {
-        private final Object value;
-
-        public ActionUnionX(Object v) {
-            this.value = v;
-        }
-
-        public State stp() {
-            return (State) value;
-        }
-
-        public Rule rp() {
-            return (Rule) value;
-        }
+    public static class StateOrRule {
+        public State stp;
+        public Rule rp;
     }
 
     public enum ActionType {
@@ -47,28 +40,19 @@ public class Action implements INode<Action> {
 
     public Symbol sp;       /* The look-ahead symbol */
     public ActionType type;
-    public ActionUnionX x;
+    public StateOrRule x = new StateOrRule();
     public Action next;     /* Next action for this state */
     public Action collide;  /* Next action with the same hash */
 
-    private static Action[] freelists;
     private static Action freelist;
 
     // Action_new
     public static Action actionNew() {
         Action new_;
-        if (freelists == null) {
+        if (freelist == null) {
             int i;
             int amt = 100;
-            freelists = new Action[amt];
-            for (i = 0; i < amt; i++) {
-                freelists[i] = new Action();
-            }
-            for (i = 0; i < amt - 1; i++) {
-                freelists[i].next = freelists[i + 1];
-            }
-            freelists[amt - 1].next = null;
-            freelist = freelists[0];
+            freelist = INext.malloc(amt, Action::new);
         }
         new_ = freelist;
         freelist = freelist.next;
@@ -82,7 +66,7 @@ public class Action implements INode<Action> {
         if (rc == 0) rc = ap1.type.ordinal() - ap2.type.ordinal();
         if (rc == 0) {
             Assert.assertTrue(ap1.type == REDUCE && ap2.type == REDUCE);
-            rc = ap1.x.rp().index - ap2.x.rp().index;
+            rc = ap1.x.rp.index - ap2.x.rp.index;
         }
         return rc;
     }
@@ -90,6 +74,20 @@ public class Action implements INode<Action> {
     // Action_sort
     public static Action actionSort(Action ap) {
         return Msort.msort(ap);
+    }
+
+    // Action_add
+    public static void actionAdd(Action[] app, ActionType type, Symbol sp, Object arg) {
+        Action new_ = actionNew();
+        new_.next = app[0];
+        app[0] = new_;
+        new_.type = type;
+        new_.sp = sp;
+        if (type == SHIFT) {
+            new_.x.stp = (State) arg;
+        } else {
+            new_.x.rp = (Rule) arg;
+        }
     }
 
     public static void main(String[] args) {
