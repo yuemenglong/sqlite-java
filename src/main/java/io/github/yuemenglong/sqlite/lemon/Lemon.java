@@ -9,7 +9,7 @@ public class Lemon {
     public int nterminal;           /* Number of terminal symbols */
     public Symbol[] symbols; /* Sorted array of pointers to symbols */
     public int errorcnt;            /* Number of errors */
-    public Symbol[] errsym;   /* The error symbol */
+    public Symbol errsym;   /* The error symbol */
     public String name;              /* Name of the generated parser */
     public String arg;               /* Declaration of the 3th argument to parser */
     public String tokentype;         /* Type of terminal symbols in the parser stack */
