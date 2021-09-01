@@ -31,7 +31,7 @@ public class Config implements INode<Config> {
 
     public Rule rp;         /* The rule upon which the configuration is based */
     public int dot;                 /* The parse point */
-    public String fws;               /* Follow-set for this configuration only */
+    public byte[] fws;               /* Follow-set for this configuration only */
     public Plink fplp;      /* Follow-set forward propagation links */
     public Plink bplp;      /* Follow-set backwards propagation links */
     public State stp;       /* Pointer to state which contains this */

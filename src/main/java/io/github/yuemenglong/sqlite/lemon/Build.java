@@ -60,27 +60,52 @@ public class Build {
             }
         } while (progress != 0);
     }
-    //
-    //  /* Now compute all first sets */
-    //  do{
-    //    struct symbol *s1, *s2;
-    //    progress = 0;
-    //    for(rp=lemp->rule; rp; rp=rp->next){
-    //      s1 = rp->lhs;
-    //      for(i=0; i<rp->nrhs; i++){
-    //        s2 = rp->rhs[i];
-    //        if( s2->type==TERMINAL ){
-    //          progress += SetAdd(s1->firstset,s2->index);
-    //          break;
-    //	}else if( s1==s2 ){
-    //          if( s1->lambda==FALSE ) break;
-    //	}else{
-    //          progress += SetUnion(s1->firstset,s2->firstset);
-    //          if( s2->lambda==FALSE ) break;
-    //	}
-    //      }
-    //    }
-    //  }while( progress );
-    //  return;
-    //}
+
+    // FindStates
+    public static void findState(Lemon lemp) {
+        Symbol sp;
+        Rule rp;
+        Config.init();
+        if (lemp.start != null) {
+            sp = Symbol.find(lemp.start);
+            if (sp == null) {
+                Error.msg(lemp.filename, 0,
+                        "The specified start symbol \"%s\" is not " +
+                                " in a nonterminal of the grammar.  \"%s\" will be used as the start " +
+                                " symbol instead.", lemp.start, lemp.rule.lhs.name);
+                lemp.errorcnt += 1;
+                sp = lemp.rule.lhs;
+            }
+        } else {
+            sp = lemp.rule.lhs;
+        }
+        for (rp = lemp.rule; rp != null; rp = rp.next) {
+            int i;
+            for (i = 0; i < rp.nrhs; i++) {
+                if (rp.rhs[i] == sp) {
+                    Error.msg(lemp.filename, 0,
+                            "The start symbol \"%s\" occurs on the" +
+                                    "right-hand side of a rule. This will result in a parser which " +
+                                    "does not work properly.", sp.name);
+                    lemp.errorcnt++;
+                }
+            }
+        }
+        for (rp = sp.rule; rp != null; rp = rp.nextlhs) {
+            Config newcfp;
+            newcfp = Configlist.addbasis(rp, 0);
+            Set.setAdd(newcfp.fws, 0);
+        }
+        //  for(rp=sp->rule; rp; rp=rp->nextlhs){
+        //    struct config *newcfp;
+        //    newcfp = Configlist_addbasis(rp,0);
+        //    SetAdd(newcfp->fws,0);
+        //  }
+        //
+        //  /* Compute the first state.  All other states will be
+        //  ** computed automatically during the computation of the first one.
+        //  ** The returned pointer to the first state is not used. */
+        //  (void)getstate(lemp);
+        //  return;
+    }
 }

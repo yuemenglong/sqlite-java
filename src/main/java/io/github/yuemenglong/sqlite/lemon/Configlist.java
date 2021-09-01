@@ -1,60 +1,77 @@
 package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.common.INext;
+import io.github.yuemenglong.sqlite.util.Addr;
+import io.github.yuemenglong.sqlite.util.Assert;
 
 public class Configlist {
-    private static Config freelist = null;      /* List of free configurations */
-    private static Config current = null;       /* Top of list of configurations */
-    private static Config[] currentend = null;   /* Last on list of configs */
-    private static Config basis = null;         /* Top of list of basis configs */
-    private static Config[] basisend = null;     /* End of list of basis configs */
+    static class Global {
+        Config freelist = null;      /* List of free configurations */
+        Config current = null;       /* Top of list of configurations */
+        Addr<Config> currentend = null;   /* Last on list of configs */
+        Config basis = null;         /* Top of list of basis configs */
+        Addr<Config> basisend = null;     /* End of list of basis configs */
+    }
+
+    private static final Global g = new Global();
 
     public static Config newConfig() {
         Config new_;
-        if (freelist == null) {
+        if (g.freelist == null) {
             int i;
             int amt = 3;
-            freelist = INext.malloc(amt, Config::new);
+            g.freelist = INext.malloc(amt, Config::new);
         }
-        new_ = freelist;
-        freelist = freelist.next;
+        new_ = g.freelist;
+        g.freelist = g.freelist.next;
         return new_;
     }
 
     public static void deleteConfig(Config old) {
-        old.next = freelist;
-        freelist = old;
+        old.next = g.freelist;
+        g.freelist = old;
     }
 
-    public static void configlistInit() {
-        current = null;
-        currentend = new Config[]{current};
-        basis = null;
-        basisend = new Config[]{basis};
-        // TODO
-//        configtableInit();
+    public static void init() {
+        g.current = null;
+        g.currentend = new Addr<>(g, "current");
+        g.basis = null;
+        g.basisend = new Addr<>(g, "basis");
+        Config.init();
     }
 
-    ///* Initialized the configuration list builder */
-    //void Configlist_init(){
-    //  current = 0;
-    //  currentend = &current;
-    //  basis = 0;
-    //  basisend = &basis;
-    //  Configtable_init();
-    //  return;
-    //}
-    //
-    ///* Initialized the configuration list builder */
-    //void Configlist_reset(){
-    //  current = 0;
-    //  currentend = &current;
-    //  basis = 0;
-    //  basisend = &basis;
-    //  Configtable_clear(0);
-    //  return;
-    //}
-    //
+    public static void reset() {
+        g.current = null;
+        g.currentend = new Addr<>(g, "current");
+        g.basis = null;
+        g.basisend = new Addr<>(g, "basis");
+        Config.clear(null);
+    }
+
+    public static Config add(Rule rp, int dot) {
+        Config cfp;
+        Config model = new Config();
+        Assert.assertTrue(g.currentend != null);
+        model.rp = rp;
+        model.dot = dot;
+        cfp = Config.find(model);
+        if (cfp == null) {
+            cfp = newConfig();
+            cfp.rp = rp;
+            cfp.dot = dot;
+            cfp.fws = Set.setNew();
+            cfp.stp = null;
+            cfp.bplp = null;
+            cfp.fplp = null;
+            cfp.next = null;
+            cfp.bp = null;
+            g.currentend.set(cfp);
+            g.currentend = new Addr<>(cfp, "next");
+            Config.insert(cfp);
+        }
+        return cfp;
+    }
+
     ///* Add another configuration to the configuration list */
     //struct config *Configlist_add(rp,dot)
     //struct rule *rp;    /* The rule */
@@ -82,6 +99,34 @@ public class Configlist {
     //  return cfp;
     //}
     //
+
+    public static Config addbasis(Rule rp, int dot) {
+        Config cfp;
+        Config model = new Config();
+        Assert.assertTrue(g.basisend != null);
+        Assert.assertTrue(g.currentend != null);
+        model.rp = rp;
+        model.dot = dot;
+        cfp = Config.find(model);
+        if (cfp == null) {
+            cfp = newConfig();
+            cfp.rp = rp;
+            cfp.dot = dot;
+            cfp.fws = Set.setNew();
+            cfp.stp = null;
+            cfp.bplp = null;
+            cfp.fplp = null;
+            cfp.next = null;
+            cfp.bp = null;
+            g.currentend.set(cfp);
+            g.currentend = new Addr<>(cfp, "next");
+            g.basisend.set(cfp);
+            g.basisend= new Addr<>(cfp, "bp");
+            Config.insert(cfp);
+        }
+        return cfp;
+    }
+
     ///* Add a basis configuration to the configuration list */
     //struct config *Configlist_addbasis(rp,dot)
     //struct rule *rp;
