@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.common.INext;
+import io.github.yuemenglong.sqlite.common.IList;
 import io.github.yuemenglong.sqlite.util.Addr;
 import io.github.yuemenglong.sqlite.util.Assert;
 
@@ -21,7 +21,7 @@ public class Configlist {
     if (g.freelist == null) {
       int i;
       int amt = 3;
-      g.freelist = INext.malloc(amt, Config::new);
+      g.freelist = IList.malloc(amt, Config::new, (prev, next) -> prev.next = next);
     }
     new_ = g.freelist;
     g.freelist = g.freelist.next;
@@ -137,7 +137,10 @@ public class Configlist {
   }
 
   public static void sort() {
-    g.current = Msort.msort(g.current, Config::cmp);
+    g.current = Msort.msort(g.current,
+            prev -> prev.next,
+            (prev, next) -> prev.next = next,
+            Config::cmp);
     g.currentend = null;
   }
   //

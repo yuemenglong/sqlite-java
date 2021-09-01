@@ -1,24 +1,12 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.common.INext;
+import io.github.yuemenglong.sqlite.common.IList;
 import io.github.yuemenglong.sqlite.util.Assert;
 
 import static io.github.yuemenglong.sqlite.lemon.Action.ActionType.REDUCE;
 import static io.github.yuemenglong.sqlite.lemon.Action.ActionType.SHIFT;
 
-public class Action implements INext<Action> {
-  public int compareTo(Action o) {
-    return cmp(this, o);
-  }
-
-  public Action getNext() {
-    return next;
-  }
-
-  public void setNext(Action v) {
-    next = v;
-  }
-
+public class Action {
   public static class StateOrRule {
     public State stp;
     public Rule rp;
@@ -48,7 +36,7 @@ public class Action implements INext<Action> {
     Action new_;
     if (freelist == null) {
       int amt = 100;
-      freelist = INext.malloc(amt, Action::new);
+      freelist = IList.malloc(amt, Action::new, (prev, next) -> prev.next = next);
     }
     new_ = freelist;
     freelist = freelist.next;
@@ -69,7 +57,10 @@ public class Action implements INext<Action> {
 
   // Action_sort
   public static Action sort(Action ap) {
-    return Msort.msort(ap, Action::cmp);
+    return Msort.msort(ap,
+            prev -> prev.next,
+            (prev, next) -> prev.next = next,
+            Action::cmp);
   }
 
   // Action_add

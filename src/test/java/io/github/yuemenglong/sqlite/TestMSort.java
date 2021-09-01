@@ -5,24 +5,12 @@ import org.junit.Test;
 
 public class TestMSort {
 
-  public static class IntNode implements io.github.yuemenglong.sqlite.common.INext<IntNode>, Comparable<IntNode> {
+  public static class IntNode {
     public int value;
     public IntNode next;
 
     public IntNode(Integer value) {
       this.value = value;
-    }
-
-    public IntNode getNext() {
-      return next;
-    }
-
-    public void setNext(IntNode v) {
-      next = v;
-    }
-
-    public int compareTo(IntNode o) {
-      return Integer.compare(value, o.value);
     }
 
     @Override
@@ -54,7 +42,10 @@ public class TestMSort {
   public void testMSort() {
     IntNode list = IntNode.create(3, 5, 4, 2);
     System.out.println(list);
-    list = Msort.msort(list, (a, b) -> Integer.compare(a.value, b.value));
+    list = Msort.msort(list,
+            prev -> prev.next,
+            (prev, next) -> prev.next = next,
+            (a, b) -> Integer.compare(a.value, b.value));
     System.out.println(list);
   }
 }
