@@ -6,53 +6,50 @@ import io.github.yuemenglong.sqlite.util.Assert;
 
 @SuppressWarnings("UnnecessaryReturnStatement")
 public class Configlist {
-  static class Global {
-    Config freelist = null;      /* List of free configurations */
-    Config current = null;       /* Top of list of configurations */
-    Addr<Config> currentend = null;   /* Last on list of configs */
-    Config basis = null;         /* Top of list of basis configs */
-    Addr<Config> basisend = null;     /* End of list of basis configs */
-  }
+  public static Config freelist = null;      /* List of free configurations */
+  public static Config current = null;       /* Top of list of configurations */
+  public static Addr<Config> currentend = null;   /* Last on list of configs */
+  public static Config basis = null;         /* Top of list of basis configs */
+  public static Addr<Config> basisend = null;     /* End of list of basis configs */
 
-  private static final Global g = new Global();
 
   public static Config newConfig() {
     Config new_;
-    if (g.freelist == null) {
+    if (freelist == null) {
       int i;
       int amt = 3;
-      g.freelist = IList.malloc(amt, Config::new, (prev, next) -> prev.next = next);
+      freelist = IList.malloc(amt, Config::new, (prev, next) -> prev.next = next);
     }
-    new_ = g.freelist;
-    g.freelist = g.freelist.next;
+    new_ = freelist;
+    freelist = freelist.next;
     return new_;
   }
 
   public static void deleteConfig(Config old) {
-    old.next = g.freelist;
-    g.freelist = old;
+    old.next = freelist;
+    freelist = old;
   }
 
   public static void init() {
-    g.current = null;
-    g.currentend = new Addr<>(() -> g.current, v -> g.current = v);
-    g.basis = null;
-    g.basisend = new Addr<>(() -> g.basis, v -> g.basis = v);
+    current = null;
+    currentend = new Addr<>(() -> current, v -> current = v);
+    basis = null;
+    basisend = new Addr<>(() -> basis, v -> basis = v);
     Config.init();
   }
 
   public static void reset() {
-    g.current = null;
-    g.currentend = new Addr<>(() -> g.current, v -> g.current = v);
-    g.basis = null;
-    g.basisend = new Addr<>(() -> g.basis, v -> g.basis = v);
+    current = null;
+    currentend = new Addr<>(() -> current, v -> current = v);
+    basis = null;
+    basisend = new Addr<>(() -> basis, v -> basis = v);
     Config.clear(null);
   }
 
   public static Config add(Rule rp, int dot) {
     Config cfp;
     Config model = new Config();
-    Assert.assertTrue(g.currentend != null);
+    Assert.assertTrue(currentend != null);
     model.rp = rp;
     model.dot = dot;
     cfp = Config.find(model);
@@ -67,8 +64,8 @@ public class Configlist {
       cfp.fplp = null;
       cfp.next = null;
       cfp.bp = null;
-      g.currentend.set(cfp);
-      g.currentend = new Addr<>(() -> c.next, v -> c.next = v);
+      currentend.set(cfp);
+      currentend = new Addr<>(() -> c.next, v -> c.next = v);
       Config.insert(cfp);
     }
     return cfp;
@@ -77,8 +74,8 @@ public class Configlist {
   public static Config addbasis(Rule rp, int dot) {
     Config cfp;
     Config model = new Config();
-    Assert.assertTrue(g.basisend != null);
-    Assert.assertTrue(g.currentend != null);
+    Assert.assertTrue(basisend != null);
+    Assert.assertTrue(currentend != null);
     model.rp = rp;
     model.dot = dot;
     cfp = Config.find(model);
@@ -93,10 +90,10 @@ public class Configlist {
       cfp.fplp = null;
       cfp.next = null;
       cfp.bp = null;
-      g.currentend.set(cfp);
-      g.currentend = new Addr<>(() -> c.next, v -> c.next = v);
-      g.basisend.set(cfp);
-      g.basisend = new Addr<>(() -> c.bp, v -> c.bp = v);
+      currentend.set(cfp);
+      currentend = new Addr<>(() -> c.next, v -> c.next = v);
+      basisend.set(cfp);
+      basisend = new Addr<>(() -> c.bp, v -> c.bp = v);
       Config.insert(cfp);
     }
     return cfp;
@@ -107,8 +104,8 @@ public class Configlist {
     Rule rp, newrp;
     Symbol sp, xsp;
     int i, dot;
-    Assert.assertTrue(g.currentend != null);
-    for (cfp = g.current; cfp != null; cfp = cfp.next) {
+    Assert.assertTrue(currentend != null);
+    for (cfp = current; cfp != null; cfp = cfp.next) {
       rp = cfp.rp;
       dot = cfp.dot;
       if (dot >= rp.nrhs) continue;
@@ -142,11 +139,11 @@ public class Configlist {
   }
 
   public static void sort() {
-    g.current = Msort.msort(g.current,
+    current = Msort.msort(current,
             prev -> prev.next,
             (prev, next) -> prev.next = next,
             Config::cmp);
-    g.currentend = null;
+    currentend = null;
   }
   //
   ///* Sort the configuration list */
