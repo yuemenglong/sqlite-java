@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 public class Config {
 
-  public enum ConfigStatus {
+  public enum Status {
     COMPLETE,              /* The status is used during followset and */
     INCOMPLETE             /*    shift computations */
   }
@@ -17,7 +17,7 @@ public class Config {
   public Plink fplp;      /* Follow-set forward propagation links */
   public Plink bplp;      /* Follow-set backwards propagation links */
   public State stp;       /* Pointer to state which contains this */
-  public ConfigStatus status;
+  public Status status;
   public Config next;     /* Next configuration in the state */
   public Config bp;       /* The next basis configuration */
 

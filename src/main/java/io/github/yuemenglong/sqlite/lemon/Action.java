@@ -3,8 +3,8 @@ package io.github.yuemenglong.sqlite.lemon;
 import io.github.yuemenglong.sqlite.common.IList;
 import io.github.yuemenglong.sqlite.util.Assert;
 
-import static io.github.yuemenglong.sqlite.lemon.Action.ActionType.REDUCE;
-import static io.github.yuemenglong.sqlite.lemon.Action.ActionType.SHIFT;
+import static io.github.yuemenglong.sqlite.lemon.Action.Type.REDUCE;
+import static io.github.yuemenglong.sqlite.lemon.Action.Type.SHIFT;
 
 public class Action {
   public static class StateOrRule {
@@ -12,7 +12,7 @@ public class Action {
     public Rule rp;
   }
 
-  public enum ActionType {
+  public enum Type {
     SHIFT,
     ACCEPT,
     REDUCE,
@@ -24,7 +24,7 @@ public class Action {
   }
 
   public Symbol sp;       /* The look-ahead symbol */
-  public ActionType type;
+  public Type type;
   public StateOrRule x = new StateOrRule();
   public Action next;     /* Next action for this state */
   public Action collide;  /* Next action with the same hash */
@@ -64,7 +64,7 @@ public class Action {
   }
 
   // Action_add
-  public static void add(Action[] app, ActionType type, Symbol sp, Object arg) {
+  public static void add(Action[] app, Type type, Symbol sp, Object arg) {
     Action new_ = new_();
     new_.next = app[0];
     app[0] = new_;
