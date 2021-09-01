@@ -1,11 +1,11 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.common.INode;
+import io.github.yuemenglong.sqlite.common.INext;
 import io.github.yuemenglong.sqlite.util.Table;
 
 import java.util.function.Consumer;
 
-public class Config implements INode<Config> {
+public class Config implements INext<Config> {
     @Override
     public Config getNext() {
         return next;
@@ -14,14 +14,6 @@ public class Config implements INode<Config> {
     @Override
     public void setNext(Config v) {
         next = v;
-    }
-
-    @Override
-    public int compareTo(Config b) {
-        Config a = this;
-        int x = a.rp.index - b.rp.index;
-        if (x == 0) x = a.dot - b.dot;
-        return x;
     }
 
     public enum ConfigStatus {
@@ -41,6 +33,7 @@ public class Config implements INode<Config> {
 
     private static Table<Config, Config> x4a;
 
+    // Configcmp
     public static int cmp(Config a, Config b) {
         int x;
         x = a.rp.index - b.rp.index;

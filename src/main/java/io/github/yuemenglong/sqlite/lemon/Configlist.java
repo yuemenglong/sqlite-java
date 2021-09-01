@@ -60,7 +60,7 @@ public class Configlist {
       cfp = newConfig();
       cfp.rp = rp;
       cfp.dot = dot;
-      cfp.fws = Set.setNew();
+      cfp.fws = Set.new_();
       cfp.stp = null;
       cfp.bplp = null;
       cfp.fplp = null;
@@ -85,7 +85,7 @@ public class Configlist {
       cfp = newConfig();
       cfp.rp = rp;
       cfp.dot = dot;
-      cfp.fws = Set.setNew();
+      cfp.fws = Set.new_();
       cfp.stp = null;
       cfp.bplp = null;
       cfp.fplp = null;
@@ -122,10 +122,10 @@ public class Configlist {
           for (i = dot + 1; i < rp.nrhs; i++) {
             xsp = rp.rhs[i];
             if (xsp.type == Symbol.SymbolType.TERMINAL) {
-              Set.setAdd(newcfp.fws, xsp.index);
+              Set.add(newcfp.fws, xsp.index);
               break;
             } else {
-              Set.setUnion(newcfp.fws, xsp.firstset);
+              Set.union(newcfp.fws, xsp.firstset);
               if (!xsp.lambda) break;
             }
           }
@@ -137,8 +137,8 @@ public class Configlist {
   }
 
   public static void sort() {
-    // TODO
-//    Msort.msort(g.current);
+    g.current = Msort.msort(g.current, Config::cmp);
+    g.currentend = null;
   }
   //
   ///* Sort the configuration list */
