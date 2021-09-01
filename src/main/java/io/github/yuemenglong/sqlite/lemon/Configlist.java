@@ -35,17 +35,17 @@ public class Configlist {
 
   public static void init() {
     g.current = null;
-    g.currentend = new Addr<>(g, "current");
+    g.currentend = new Addr<>(() -> g.current, v -> g.current = v);
     g.basis = null;
-    g.basisend = new Addr<>(g, "basis");
+    g.basisend = new Addr<>(() -> g.basis, v -> g.basis = v);
     Config.init();
   }
 
   public static void reset() {
     g.current = null;
-    g.currentend = new Addr<>(g, "current");
+    g.currentend = new Addr<>(() -> g.current, v -> g.current = v);
     g.basis = null;
-    g.basisend = new Addr<>(g, "basis");
+    g.basisend = new Addr<>(() -> g.basis, v -> g.basis = v);
     Config.clear(null);
   }
 
@@ -58,6 +58,7 @@ public class Configlist {
     cfp = Config.find(model);
     if (cfp == null) {
       cfp = newConfig();
+      Config c = cfp;
       cfp.rp = rp;
       cfp.dot = dot;
       cfp.fws = Set.new_();
@@ -67,7 +68,7 @@ public class Configlist {
       cfp.next = null;
       cfp.bp = null;
       g.currentend.set(cfp);
-      g.currentend = new Addr<>(cfp, "next");
+      g.currentend = new Addr<>(() -> c.next, v -> c.next = v);
       Config.insert(cfp);
     }
     return cfp;
@@ -83,6 +84,7 @@ public class Configlist {
     cfp = Config.find(model);
     if (cfp == null) {
       cfp = newConfig();
+      Config c = cfp;
       cfp.rp = rp;
       cfp.dot = dot;
       cfp.fws = Set.new_();
@@ -92,9 +94,9 @@ public class Configlist {
       cfp.next = null;
       cfp.bp = null;
       g.currentend.set(cfp);
-      g.currentend = new Addr<>(cfp, "next");
+      g.currentend = new Addr<>(() -> c.next, v -> c.next = v);
       g.basisend.set(cfp);
-      g.basisend = new Addr<>(cfp, "bp");
+      g.basisend = new Addr<>(() -> c.bp, v -> c.bp = v);
       Config.insert(cfp);
     }
     return cfp;
@@ -129,7 +131,10 @@ public class Configlist {
               if (!xsp.lambda) break;
             }
           }
-          if (i == rp.nrhs) Plink.add(new Addr<>(cfp, "fplp"), newcfp);
+          if (i == rp.nrhs) {
+            Config c = cfp;
+            Plink.add(new Addr<>(() -> c.fplp, v -> c.fplp = v), newcfp);
+          }
         }
       }
     }

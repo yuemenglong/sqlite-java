@@ -1,35 +1,25 @@
 package io.github.yuemenglong.sqlite.util;
 
 import java.lang.reflect.Field;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unchecked")
 public class Addr<T> {
 
-    private final Object obj;
-    private final Field field;
+  private final Supplier<T> getter;
+  private final Consumer<T> setter;
 
-    public Addr(Object obj, String field) {
-        try {
-            this.obj = obj;
-            this.field = obj.getClass().getDeclaredField(field);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+  public Addr(Supplier<T> getter, Consumer<T> setter) {
+    this.getter = getter;
+    this.setter = setter;
+  }
 
-    public void set(T value) {
-        try {
-            field.set(obj, value);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+  public void set(T value) {
+    setter.accept(value);
+  }
 
-    public T get() {
-        try {
-            return (T) field.get(obj);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
+  public T get() {
+    return getter.get();
+  }
 }
