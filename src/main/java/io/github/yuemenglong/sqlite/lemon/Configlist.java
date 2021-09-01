@@ -145,6 +145,7 @@ public class Configlist {
             Config::cmp);
     currentend = null;
   }
+
   //
   ///* Sort the configuration list */
   //void Configlist_sort(){
@@ -153,6 +154,14 @@ public class Configlist {
   //  return;
   //}
   //
+  public static void sortbasis() {
+    basis = Msort.msort(current,
+            prev -> prev.bp,
+            (prev, next) -> prev.bp = next,
+            Config::cmp);
+    basisend = null;
+  }
+
   ///* Sort the basis configuration list */
   //void Configlist_sortbasis(){
   //  basis = (struct config *)msort(current,&(current->bp),Configcmp);
@@ -162,6 +171,13 @@ public class Configlist {
   //
   ///* Return a pointer to the head of the configuration list and
   //** reset the list */
+  public static Config return_() {
+    Config old = current;
+    current = null;
+    currentend = null;
+    return old;
+  }
+
   //struct config *Configlist_return(){
   //  struct config *old;
   //  old = current;
@@ -170,6 +186,13 @@ public class Configlist {
   //  return old;
   //}
   //
+  public static Config basis() {
+    Config old = basis;
+    basis = null;
+    basisend = null;
+    return old;
+  }
+
   ///* Return a pointer to the head of the configuration list and
   //** reset the list */
   //struct config *Configlist_basis(){
@@ -180,6 +203,16 @@ public class Configlist {
   //  return old;
   //}
   //
+  public static void eat(Config cfp) {
+    Config nextcfp;
+    for (; cfp != null; cfp = nextcfp) {
+      nextcfp = cfp.next;
+      Assert.assertTrue(cfp.fplp == null);
+      Assert.assertTrue(cfp.bplp == null);
+      if (cfp.fws != null) Set.free(cfp.fws);
+      deleteConfig(cfp);
+    }
+  }
   ///* Free all elements of the given configuration list */
   //void Configlist_eat(cfp)
   //struct config *cfp;
