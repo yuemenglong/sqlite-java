@@ -2,6 +2,8 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.util.Addr;
 
+import static io.github.yuemenglong.sqlite.lemon.Common.MAXRHS;
+
 public class Pstate {
   //  enum e_state {
   //    INITIALIZE,
@@ -23,7 +25,6 @@ public class Pstate {
   //    WAITING_FOR_DESTRUCTOR_SYMBOL,
   //    WAITING_FOR_DATATYPE_SYMBOL
   //  } state;                   /* The state of the parser */
-  private static final int MAXRHS = 5;
 
   public enum State {
     INITIALIZE,
@@ -43,13 +44,15 @@ public class Pstate {
     RESYNC_AFTER_RULE_ERROR,
     RESYNC_AFTER_DECL_ERROR,
     WAITING_FOR_DESTRUCTOR_SYMBOL,
-    WAITING_FOR_DATATYPE_SYMBO
+    WAITING_FOR_DATATYPE_SYMBOL
   }
 
+  public byte[] buf;
   public String filename;       /* Name of the input file */
   public int tokenlineno;      /* Linenumber at which current token starts */
   public int errorcnt;         /* Number of errors so far */
-  public String tokenstart;     /* Text of current token */
+  public int tokenstart;     /* Text of current token */
+  public int tokenend;     /* Text of current token */
   public Lemon gp;     /* Global state vector */
   public State state;
   public Symbol lhs;        /* Left-hand side of current rule */

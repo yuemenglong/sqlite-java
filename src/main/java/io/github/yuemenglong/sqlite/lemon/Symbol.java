@@ -2,6 +2,8 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.util.Table;
 
+import static io.github.yuemenglong.sqlite.util.Util.isupper;
+
 public class Symbol {
   public enum SymbolType {
     TERMINAL,
@@ -31,6 +33,25 @@ public class Symbol {
   public int dtnum;               /* The data type number.  In the parser, the value
    ** stack is a union.  The .yy%d element of this
    ** union is the correct data type for this object */
+
+  @SuppressWarnings("SuspiciousNameCombination")
+  public static Symbol new_(String x) {
+    Symbol sp = find(x);
+    if (sp == null) {
+      sp = new Symbol();
+      sp.name = Strsafe.safe(x);
+      sp.type = isupper(x.charAt(0)) ? SymbolType.TERMINAL : SymbolType.NONTERMINAL;
+      sp.rule = null;
+      sp.prec = -1;
+      sp.assoc = Assoc.UNK;
+      sp.firstset = null;
+      sp.lambda = false;
+      sp.destructor = null;
+      sp.datatype = null;
+      insert(sp, sp.name);
+    }
+    return sp;
+  }
 
   private static Table<String, Symbol> x2a;
 

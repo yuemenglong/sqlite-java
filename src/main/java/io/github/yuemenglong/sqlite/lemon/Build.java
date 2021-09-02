@@ -1,6 +1,5 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import com.sun.org.apache.regexp.internal.RE;
 import io.github.yuemenglong.sqlite.util.Addr;
 import io.github.yuemenglong.sqlite.util.Assert;
 
