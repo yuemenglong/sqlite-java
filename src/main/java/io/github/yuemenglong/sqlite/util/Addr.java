@@ -22,4 +22,9 @@ public class Addr<T> {
   public T get() {
     return getter.get();
   }
+
+  @Override
+  public String toString() {
+    return String.valueOf(get());
+  }
 }

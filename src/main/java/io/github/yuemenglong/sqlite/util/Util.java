@@ -26,6 +26,7 @@ public class Util {
       case ' ':
       case '\t':
       case '\n':
+      case '\r':
         return true;
       default:
         return false;

@@ -2,7 +2,7 @@ package io.github.yuemenglong.sqlite.common;
 
 import java.util.function.Supplier;
 
-public interface IList<T> {
+public interface IList {
   interface GetNext<T> {
     T call(T prev);
   }
