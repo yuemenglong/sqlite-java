@@ -1,6 +1,7 @@
 package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.common.IList;
+import io.github.yuemenglong.sqlite.util.Addr;
 import io.github.yuemenglong.sqlite.util.Assert;
 
 import static io.github.yuemenglong.sqlite.lemon.Action.Type.REDUCE;
@@ -64,10 +65,10 @@ public class Action {
   }
 
   // Action_add
-  public static void add(Action[] app, Type type, Symbol sp, Object arg) {
+  public static void add(Addr<Action> app, Type type, Symbol sp, Object arg) {
     Action new_ = new_();
-    new_.next = app[0];
-    app[0] = new_;
+    new_.next = app.get();
+    app.set(new_);
     new_.type = type;
     new_.sp = sp;
     if (type == SHIFT) {

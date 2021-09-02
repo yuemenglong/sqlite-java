@@ -1,5 +1,9 @@
 package io.github.yuemenglong.sqlite.lemon;
 
+import com.sun.org.apache.regexp.internal.RE;
+import io.github.yuemenglong.sqlite.util.Addr;
+import io.github.yuemenglong.sqlite.util.Assert;
+
 public class Build {
   // FindRulePrecedences
   public static void findRulePrecedences(Lemon xp) {
@@ -99,45 +103,212 @@ public class Build {
     getstate(lemp);
   }
 
-  public static void getstate(Lemon lemp) {
-    //TODO
+  public static State getstate(Lemon lemp) {
+    Config cfp, bp;
+    State stp;
+    Configlist.sortbasis();
+    bp = Configlist.basis();
+    stp = State.find(bp);
+    if (stp != null) {
+      Config x, y;
+      for (x = bp, y = stp.bp; x != null && y != null; x = x.bp, y = y.bp) {
+        Config yy = y;
+        Plink.copy(new Addr<>(() -> yy.bplp, v -> yy.bplp = v), x.bplp);
+        Plink.delete(x.fplp);
+        x.fplp = null;
+        x.bplp = null;
+      }
+      cfp = Configlist.return_();
+      Configlist.eat(cfp);
+    } else {
+      Configlist.closure(lemp);
+      Configlist.sort();
+      cfp = Configlist.return_();
+      stp = State.new_();
+      stp.bp = bp;
+      stp.cfp = cfp;
+      stp.index = lemp.nstate++;
+      stp.ap = null;
+      State.insert(stp, stp.bp);
+      buildshifts(lemp, stp);
+    }
+    return stp;
+  }
 
-    //  struct config *cfp, *bp;
-    //  struct state *stp;
-    //
-    //  /* Extract the sorted basis of the new state.  The basis was constructed
-    //  ** by prior calls to "Configlist_addbasis()". */
-    //  Configlist_sortbasis();
-    //  bp = Configlist_basis();
-    //
-    //  /* Get a state with the same basis */
-    //  stp = State_find(bp);
-    //  if( stp ){
-    //    /* A state with the same basis already exists!  Copy all the follow-set
-    //    ** propagation links from the state under construction into the
-    //    ** preexisting state, then return a pointer to the preexisting state */
-    //    struct config *x, *y;
-    //    for(x=bp, y=stp->bp; x && y; x=x->bp, y=y->bp){
-    //      Plink_copy(&y->bplp,x->bplp);
-    //      Plink_delete(x->fplp);
-    //      x->fplp = x->bplp = 0;
-    //    }
-    //    cfp = Configlist_return();
-    //    Configlist_eat(cfp);
-    //  }else{
-    //    /* This really is a new state.  Construct all the details */
-    //    Configlist_closure(lemp);    /* Compute the configuration closure */
-    //    Configlist_sort();           /* Sort the configuration closure */
-    //    cfp = Configlist_return();   /* Get a pointer to the config list */
-    //    stp = State_new();           /* A new state structure */
-    //    MemoryCheck(stp);
-    //    stp->bp = bp;                /* Remember the configuration basis */
-    //    stp->cfp = cfp;              /* Remember the configuration closure */
-    //    stp->index = lemp->nstate++; /* Every state gets a sequence number */
-    //    stp->ap = 0;                 /* No actions, yet. */
-    //    State_insert(stp,stp->bp);   /* Add to the state table */
-    //    buildshifts(lemp,stp);       /* Recursively compute successor states */
-    //  }
-    //  return stp;
+  public static void buildshifts(Lemon lemp, State stp) {
+    Config cfp;
+    Config bcfp;
+    Config new_;
+    Symbol sp;
+    Symbol bsp;
+    State newstp;
+    for (cfp = stp.cfp; cfp != null; cfp = cfp.next) cfp.status = Config.Status.INCOMPLETE;
+
+    for (cfp = stp.cfp; cfp != null; cfp = cfp.next) {
+      if (cfp.status == Config.Status.COMPLETE) continue;
+      if (cfp.dot >= cfp.rp.nrhs) continue;
+      Configlist.reset();
+      sp = cfp.rp.rhs[cfp.dot];
+
+      for (bcfp = cfp; bcfp != null; bcfp = bcfp.next) {
+        if (bcfp.status == Config.Status.COMPLETE) continue;
+        if (bcfp.dot >= bcfp.rp.nrhs) continue;
+        bsp = bcfp.rp.rhs[bcfp.dot];
+        if (bsp != sp) continue;
+        bcfp.status = Config.Status.COMPLETE;
+        new_ = Configlist.addbasis(bcfp.rp, bcfp.dot + 1);
+        Config n = new_;
+        Plink.add(new Addr<>(() -> n.bplp, v -> n.bplp = v), bcfp);
+      }
+      newstp = getstate(lemp);
+      Action.add(new Addr<>(() -> stp.ap, v -> stp.ap = v), Action.Type.SHIFT, sp, newstp);
+    }
+  }
+
+  public static void findLinks(Lemon lemp) {
+    int i;
+    Config cfp, other;
+    State stp;
+    Plink plp;
+    for (i = 0; i < lemp.nstate; i++) {
+      stp = lemp.sorted[i];
+      for (cfp = stp.cfp; cfp != null; cfp = cfp.next) {
+        cfp.stp = stp;
+      }
+    }
+    for (i = 0; i < lemp.nstate; i++) {
+      stp = lemp.sorted[i];
+      for (cfp = stp.cfp; cfp != null; cfp = cfp.next) {
+        for (plp = cfp.bplp; plp != null; plp = plp.next) {
+          other = plp.cfp;
+          Config o = other;
+          Plink.add(new Addr<>(() -> o.fplp, v -> o.fplp = v), cfp);
+        }
+      }
+    }
+  }
+
+  public static void findFollowSets(Lemon lemp) {
+    int i;
+    Config cfp;
+    Plink plp;
+    int progress;
+    int change;
+    for (i = 0; i < lemp.nstate; i++) {
+      for (cfp = lemp.sorted[i].cfp; cfp != null; cfp = cfp.next) {
+        cfp.status = Config.Status.INCOMPLETE;
+      }
+    }
+    do {
+      progress = 0;
+      for (i = 0; i < lemp.nstate; i++) {
+        for (cfp = lemp.sorted[i].cfp; cfp != null; cfp = cfp.next) {
+          if (cfp.status == Config.Status.COMPLETE) continue;
+          for (plp = cfp.fplp; plp != null; plp = plp.next) {
+            change = Set.union(plp.cfp.fws, cfp.fws);
+            if (change != 0) {
+              plp.cfp.status = Config.Status.INCOMPLETE;
+              progress = 1;
+            }
+          }
+          cfp.status = Config.Status.COMPLETE;
+        }
+      }
+    } while (progress != 0);
+  }
+
+  public static void findActions(Lemon lemp) {
+    int i, j;
+    Config cfp;
+    State stp;
+    Symbol sp;
+    Rule rp;
+
+    for (i = 0; i < lemp.nstate; i++) {
+      stp = lemp.sorted[i];
+      for (cfp = stp.cfp; cfp != null; cfp = cfp.next) {
+        if (cfp.rp.nrhs == cfp.dot) {
+          for (j = 0; j < lemp.nterminal; j++) {
+            if (Set.find(cfp.fws, j) != 0) {
+              State s = stp;
+              Action.add(new Addr<>(() -> s.ap, v -> s.ap = v), Action.Type.REDUCE, lemp.symbols[j], cfp.rp);
+            }
+          }
+        }
+      }
+    }
+    if (lemp.start != null) {
+      sp = Symbol.find(lemp.start);
+      if (sp == null) sp = lemp.rule.lhs;
+    } else {
+      sp = lemp.rule.lhs;
+    }
+    State s = lemp.sorted[0];
+    Action.add(new Addr<>(() -> s.ap, v -> s.ap = v), Action.Type.ACCEPT, sp, null);
+    for (i = 0; i < lemp.nstate; i++) {
+      Action ap, nap;
+      stp = lemp.sorted[i];
+      Assert.assertTrue(stp.ap != null);
+      stp.ap = Action.sort(stp.ap);
+      for (ap = stp.ap; ap != null && ap.next != null; ap = nap) {
+        for (nap = ap.next; nap != null && nap.sp == ap.sp; nap = nap.next) {
+          lemp.nconflict += resolveConfict(ap, nap, lemp.errsym);
+        }
+      }
+    }
+    for (rp = lemp.rule; rp != null; rp = rp.next) rp.canReduce = Boolean.FALSE;
+    for (i = 0; i < lemp.nstate; i++) {
+      Action ap;
+      for (ap = lemp.sorted[i].ap; ap != null; ap = ap.next) {
+        if (ap.type == Action.Type.REDUCE) ap.x.rp.canReduce = Boolean.TRUE;
+      }
+    }
+    for (rp = lemp.rule; rp != null; rp = rp.next) {
+      if (rp.canReduce) continue;
+      Error.msg(lemp.filename, rp.ruleline, "This rule can not be reduced.\n");
+      lemp.errorcnt++;
+    }
+  }
+
+  public static int resolveConfict(Action apx, Action apy, Symbol errsym) {
+    Symbol spx, spy;
+    int errcnt = 0;
+    Assert.assertTrue(apx.sp == apy.sp);
+    if (apx.type == Action.Type.SHIFT && apy.type == Action.Type.REDUCE) {
+      spx = apx.sp;
+      spy = apy.x.rp.precsym;
+      if (spy == null || spx.prec < 0 || spy.prec < 0) {
+        apy.type = Action.Type.CONFLICT;
+        errcnt++;
+      } else if (spx.prec > spy.prec) {
+        apy.type = Action.Type.RD_RESOLVED;
+      } else if (spx.prec < spy.prec) {
+        apx.type = Action.Type.SH_RESOLVED;
+      } else if (spx.assoc == Symbol.Assoc.RIGHT) {
+        apy.type = Action.Type.RD_RESOLVED;
+      } else if (spx.assoc == Symbol.Assoc.LEFT) {
+        apx.type = Action.Type.SH_RESOLVED;
+      } else {
+        Assert.assertTrue(spx.assoc == Symbol.Assoc.NONE);
+        apy.type = Action.Type.CONFLICT;
+        errcnt++;
+      }
+    } else if (apx.type == Action.Type.REDUCE && apy.type == Action.Type.REDUCE) {
+      spx = apx.x.rp.precsym;
+      spy = apy.x.rp.precsym;
+      if (spx == null || spy == null || spx.prec < 0 || spy.prec < 0 || spx.prec == spy.prec) {
+        apy.type = Action.Type.CONFLICT;
+        errcnt++;
+      } else if (spx.prec > spy.prec) {
+        apy.type = Action.Type.RD_RESOLVED;
+      } else {
+        apx.type = Action.Type.RD_RESOLVED;
+      }
+    } else {
+      //    /* Can't happen.  Shifts have to come before Reduces on the
+      //    ** list because the reduces were added last.  Hence, if apx->type==REDUCE
+      //    ** then it is impossible for apy->type==SHIFT */
+    }
+    return errcnt;
   }
 }

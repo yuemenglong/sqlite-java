@@ -40,4 +40,8 @@ public class Set {
     }
     return progress;
   }
+
+  public static int find(byte[] x, int y) {
+    return x[y];
+  }
 }

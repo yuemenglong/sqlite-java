@@ -35,7 +35,7 @@ public class State {
     return h;
   }
 
-  public static State stateNew() {
+  public static State new_() {
     return new State();
   }
 
@@ -47,17 +47,17 @@ public class State {
     x3a.init(128);
   }
 
-  public int insert(State data, Config key) {
+  public static int insert(State data, Config key) {
     if (x3a == null) return 0;
     return x3a.insert(key, data);
   }
 
-  public State find(Config key) {
+  public static State find(Config key) {
     if (x3a == null) return null;
     return x3a.find(key);
   }
 
-  public State[] arrayOf() {
+  public static State[] arrayOf() {
     if (x3a == null) return null;
     return x3a.arrayOf(State.class);
   }
