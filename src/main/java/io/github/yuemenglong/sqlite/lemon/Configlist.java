@@ -112,8 +112,8 @@ public class Configlist {
       sp = rp.rhs[dot];
       if (sp.type == Symbol.SymbolType.NONTERMINAL) {
         if (sp.rule == null && sp != lemp.errsym) {
-          Error.msg(lemp.filename, rp.line, "Nonterminal \"%s\" has no rules.",
-                  sp.name);
+          Error.msg(lemp.filename, rp.line, String.format("Nonterminal \"%s\" has no rules.",
+                  sp.name));
           lemp.errorcnt++;
         }
         for (newrp = sp.rule; newrp != null; newrp = newrp.nextlhs) {

@@ -68,7 +68,7 @@ public class Build {
   public static void findStates(Lemon lemp) {
     Symbol sp;
     Rule rp;
-    Config.init();
+    Configlist.init();
     if (lemp.start != null) {
       sp = Symbol.find(lemp.start);
       if (sp == null) {

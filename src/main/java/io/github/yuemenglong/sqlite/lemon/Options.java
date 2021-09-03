@@ -67,10 +67,13 @@ public class Options {
    ** if N is out of range.
    */
   public static int argindex(int n) {
+    if (n == 0) {
+      return 0;
+    }
     int i;
     int dashdash = 0;
     if (argv != null && argv[0] != null) {
-      for (i = 1; argv[i] != null; i++) {
+      for (i = 1; i < argv.length; i++) {
         if (dashdash != 0 || !ISOPT(argv[i])) {
           if (n == 0) return i;
           n--;
@@ -211,7 +214,7 @@ public class Options {
     errstream = err;
     if (argv != null && argv[0] != null && op != null) {
       int i;
-      for (i = 1; argv[i] != null; i++) {
+      for (i = 1; i < argv.length; i++) {
         if (argv[i].charAt(0) == '+' || argv[i].charAt(0) == '-') {
           errcnt += handleflags(i, err);
         } else if (strchr(argv[i], '=') != 0) {
@@ -231,8 +234,9 @@ public class Options {
     int cnt = 0;
     int dashdash = 0;
     int i;
-    if (argv != null && argv[0] != null) {
-      for (i = 1; argv[i] != null; i++) {
+    if (argv.length > 0 && argv[0] != null) {
+      cnt = 1;
+      for (i = 1; i < argv.length; i++) {
         if (dashdash != 0 || !ISOPT(argv[i])) cnt++;
         if (strcmp(argv[i], "--") == 0) dashdash = 1;
       }
