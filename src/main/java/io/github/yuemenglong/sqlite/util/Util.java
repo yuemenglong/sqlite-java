@@ -43,8 +43,16 @@ public class Util {
     return str.lastIndexOf(c);
   }
 
+  public static int strchr(String str, int c) {
+    return str.indexOf(c);
+  }
+
   public static String getenv(String key) {
     return System.getenv(key);
+  }
+
+  public static int strlen(String s) {
+    return s.length();
   }
 
   //  strncmp(&line[i],"Parse",5)==0
@@ -58,5 +66,13 @@ public class Util {
 
   public static int atoi(String s) {
     return Integer.parseInt(s);
+  }
+
+  public static double strtod(String s) {
+    return Double.parseDouble(s);
+  }
+
+  public static long strtol(String s, int n) {
+    return Long.parseLong(s, n);
   }
 }
