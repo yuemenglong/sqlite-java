@@ -55,4 +55,8 @@ public class Util {
   public static int strcmp(String a, String b) {
     return a.compareTo(b);
   }
+
+  public static int atoi(String s) {
+    return Integer.parseInt(s);
+  }
 }
