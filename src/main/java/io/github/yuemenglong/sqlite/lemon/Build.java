@@ -65,7 +65,7 @@ public class Build {
   }
 
   // FindStates
-  public static void findState(Lemon lemp) {
+  public static void findStates(Lemon lemp) {
     Symbol sp;
     Rule rp;
     Config.init();

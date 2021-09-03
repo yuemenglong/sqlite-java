@@ -1,5 +1,7 @@
 package io.github.yuemenglong.sqlite.lemon;
 
+import io.github.yuemenglong.sqlite.util.Addr;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.function.Consumer;
@@ -15,9 +17,16 @@ public class Options {
     OPT_FFLAG, OPT_FINT, OPT_FDBL, OPT_FSTR
   }
 
+  public Options(Type type, String label, Addr<Object> arg, String message) {
+    this.type = type;
+    this.label = label;
+    this.arg = arg;
+    this.message = message;
+  }
+
   public Type type;
   public String label;
-  public Object arg;
+  public Addr<Object> arg;
   public String message;
 
   private static String[] argv;
@@ -91,9 +100,9 @@ public class Options {
       }
       errcnt++;
     } else if (op[j].type == OPT_FLAG) {
-      op[j].arg = v;
+      op[j].arg.set(v);
     } else if (op[j].type == OPT_FFLAG) {
-      ((Consumer) (op[j].arg)).accept(v);
+      ((Consumer) (op[j].arg.get())).accept(v);
     } else {
       if (err != null) {
         err.write(String.format("%smissing argument on switch.\n", emsg).getBytes());
@@ -173,29 +182,29 @@ public class Options {
         case OPT_FFLAG:
           break;
         case OPT_DBL:
-          op[j].arg = dv;
+          op[j].arg.set(dv);
           break;
         case OPT_FDBL:
-          ((Consumer) (op[j].arg)).accept(dv);
+          ((Consumer) (op[j].arg.get())).accept(dv);
           break;
         case OPT_INT:
-          op[j].arg = lv;
+          op[j].arg.set(lv);
           break;
         case OPT_FINT:
-          ((Consumer) (op[j].arg)).accept(lv);
+          ((Consumer) (op[j].arg.get())).accept(lv);
           break;
         case OPT_STR:
-          op[j].arg = sv;
+          op[j].arg.set(sv);
           break;
         case OPT_FSTR:
-          ((Consumer) (op[j].arg)).accept(sv);
+          ((Consumer) (op[j].arg.get())).accept(sv);
           break;
       }
     }
     return errcnt;
   }
 
-  int OptInit(String[] a, Options[] o, OutputStream err) throws IOException {
+  public static int optInit(String[] a, Options[] o, OutputStream err) throws IOException {
     int errcnt = 0;
     argv = a;
     op = o;
@@ -212,13 +221,13 @@ public class Options {
     }
     if (errcnt > 0) {
       err.write(String.format("Valid command line options for \"%s\" are:\n", a[0]).getBytes());
-      OptPrint();
+      optPrint();
       System.exit(1);
     }
     return 0;
   }
 
-  public static int OptNArgs() {
+  public static int optNArgs() {
     int cnt = 0;
     int dashdash = 0;
     int i;
@@ -231,19 +240,19 @@ public class Options {
     return cnt;
   }
 
-  public static String OptArg(int n) {
+  public static String optArg(int n) {
     int i;
     i = argindex(n);
     return i >= 0 ? argv[i] : null;
   }
 
-  void OptErr(int n) throws IOException {
+  public static void optErr(int n) throws IOException {
     int i;
     i = argindex(n);
     if (i >= 0) errline(i, 0, errstream);
   }
 
-  void OptPrint() throws IOException {
+  public static void optPrint() throws IOException {
     int i;
     int max, len;
     max = 0;
