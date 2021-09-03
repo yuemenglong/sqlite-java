@@ -30,7 +30,7 @@ public class Main {
     Arrays.sort(lem.symbols, Comparator.comparing(o -> o.name));
     int i;
     for (i = 0; i < lem.symbols.length; i++) lem.symbols[i].index = i;
-    for (i = 1; isupper(lem.symbols[i].name.charAt(0)); i++) ;
+    for (i = 1; isupper((byte) lem.symbols[i].name.charAt(0)); i++) ;
     lem.nterminal = i;
 
     Set.size(lem.nterminal);

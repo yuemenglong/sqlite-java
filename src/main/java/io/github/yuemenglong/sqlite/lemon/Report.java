@@ -5,6 +5,7 @@ import io.github.yuemenglong.sqlite.util.Assert;
 
 import java.io.*;
 
+import static io.github.yuemenglong.sqlite.lemon.Common.MAXRHS;
 import static io.github.yuemenglong.sqlite.util.Util.*;
 
 public class Report {
@@ -205,7 +206,7 @@ public class Report {
       if (name != null) {
         for (i = 0; i < line.length(); i++) {
           if (line.charAt(i) == 'P' && strncmp(line.substring(i), "Parse", 5) == 0
-                  && (i == 0 || !isalpha(line.charAt(i - 1)))
+                  && (i == 0 || !isalpha((byte) line.charAt(i - 1)))
           ) {
             if (i > iStart) out.write(String.format("%." + (i - iStart) + "s", line.substring(iStart)).getBytes());
             out.write(name.getBytes());
@@ -277,102 +278,81 @@ public class Report {
     lineno.set(lineno.get() + 3 + linecnt);
     out.write(String.format("}\n#line %d \"%s\"\n", lineno.get(), lemp.outname).getBytes());
   }
-  ///*
-  //** Return TRUE (non-zero) if the given symbol has a distructor.
-  //*/
-  //int has_destructor(sp, lemp)
-  //struct symbol *sp;
-  //struct lemon *lemp;
-  //{
-  //  int ret;
-  //  if( sp.type==TERMINAL ){
-  //    ret = lemp.tokendest!=0;
-  //  }else{
-  //    ret = sp.destructor!=0;
-  //  }
-  //  return ret;
-  //}
-  //
-  ///*
-  //** Generate code which executes when the rule "rp" is reduced.  Write
-  //** the code to "out".  Make sure lineno stays up-to-date.
-  //*/
-  //PRIVATE void emit_code(out,rp,lemp,lineno)
-  //FILE *out;
-  //struct rule *rp;
-  //struct lemon *lemp;
-  //int *lineno;
-  //{
-  // char *cp, *xp;
-  // int linecnt = 0;
-  // int i;
-  // char lhsused = 0;    /* True if the LHS element has been used */
-  // char used[MAXRHS];   /* True for each RHS element which is used */
-  //
-  // for(i=0; i<rp.nrhs; i++) used[i] = 0;
-  // lhsused = 0;
-  //
-  // /* Generate code to do the reduce action */
-  // if( rp.code ){
-  //   fprintf(out,"#line %d \"%s\"\n{",rp.line,lemp.filename);
-  //   for(cp=rp.code; *cp; cp++){
-  //     if( isalpha(*cp) && (cp==rp.code || !isalnum(cp[-1])) ){
-  //       char saved;
-  //       for(xp= &cp[1]; isalnum(*xp); xp++);
-  //       saved = *xp;
-  //       *xp = 0;
-  //       if( rp.lhsalias && strcmp(cp,rp.lhsalias)==0 ){
-  //         fprintf(out,"yygotominor.yy%d",rp.lhs.dtnum);
-  //         cp = xp;
-  //         lhsused = 1;
-  //       }else{
-  //         for(i=0; i<rp.nrhs; i++){
-  //           if( rp.rhsalias[i] && strcmp(cp,rp.rhsalias[i])==0 ){
-  //             fprintf(out,"yymsp[%d].minor.yy%d",i-rp.nrhs+1,rp.rhs[i].dtnum);
-  //             cp = xp;
-  //             used[i] = 1;
-  //             break;
-  //           }
-  //         }
-  //       }
-  //       *xp = saved;
-  //     }
-  //     if( *cp=='\n' ) linecnt++;
-  //     fputc(*cp,out);
-  //   } /* End loop */
-  //   (*lineno) += 3 + linecnt;
-  //   fprintf(out,"}\n#line %d \"%s\"\n",*lineno,lemp.outname);
-  // } /* End if( rp.code ) */
-  //
-  // /* Check to make sure the LHS has been used */
-  // if( rp.lhsalias && !lhsused ){
-  //   ErrorMsg(lemp.filename,rp.ruleline,
-  //     "Label \"%s\" for \"%s(%s)\" is never used.",
-  //       rp.lhsalias,rp.lhs.name,rp.lhsalias);
-  //   lemp.errorcnt++;
-  // }
-  //
-  // /* Generate destructor code for RHS symbols which are not used in the
-  // ** reduce code */
-  // for(i=0; i<rp.nrhs; i++){
-  //   if( rp.rhsalias[i] && !used[i] ){
-  //     ErrorMsg(lemp.filename,rp.ruleline,
-  //       "Label $%s$ for \"%s(%s)\" is never used.",
-  //       rp.rhsalias[i],rp.rhs[i].name,rp.rhsalias[i]);
-  //     lemp.errorcnt++;
-  //   }else if( rp.rhsalias[i]==0 ){
-  //     if( has_destructor(rp.rhs[i],lemp) ){
-  //       fprintf(out,"  yy_destructor(%d,&yymsp[%d].minor);\n",
-  //          rp.rhs[i].index,i-rp.nrhs+1); (*lineno)++;
-  //     }else{
-  //       fprintf(out,"        /* No destructor defined for %s */\n",
-  //        rp.rhs[i].name);
-  //        (*lineno)++;
-  //     }
-  //   }
-  // }
-  // return;
-  //}
+
+  public static int hasDestructor(Symbol sp, Lemon lemp) {
+    boolean ret;
+    if (sp.type == Symbol.SymbolType.TERMINAL) {
+      ret = lemp.tokendest != null;
+    } else {
+      ret = sp.destructor != null;
+    }
+    return ret ? 1 : 0;
+  }
+
+  public static void emitCode(OutputStream out, Rule rp, Lemon lemp, Addr<Integer> lineno) throws IOException {
+    int cp, xp;
+    int linecnt = 0;
+    int i;
+    byte lhsused = 0;
+    byte[] used = new byte[MAXRHS];
+    for (i = 0; i < rp.nrhs; i++) used[i] = 0;
+    lhsused = 0;
+    if (rp.code != null) {
+      out.write(String.format("#line %d \"%s\"\n{", rp.line, lemp.filename).getBytes());
+      String s = rp.code;
+      byte[] b = s.getBytes();
+      for (cp = 0; cp < b.length; cp++) {
+        if (isalpha(b[cp]) && (cp == 0 || !isalnum(b[cp - 1]))) {
+          int saved = 0;
+          for (xp = cp + 1; isalnum(b[xp]); xp++) ;
+          saved = xp;
+          if (rp.lhsalias != null && strcmp(s.substring(cp), rp.lhsalias) == 0) {
+            out.write(String.format("yygotominor.yy%d", rp.lhs.dtnum).getBytes());
+            cp = xp;
+            lhsused = 1;
+          } else {
+            for (i = 0; i < rp.nrhs; i++) {
+              if (rp.rhsalias[i] != null && strcmp(s.substring(cp), rp.rhsalias[i]) == 0) {
+                out.write(String.format("yymsp[%d].minor.yy%d", i - rp.nrhs + 1, rp.rhs[i].dtnum).getBytes());
+                cp = xp;
+                used[i] = 1;
+                break;
+              }
+            }
+          }
+          xp = saved;
+        }
+        if (b[cp] == '\n') linecnt++;
+        out.write(b[cp]);
+      }
+      lineno.set(lineno.get() + 3 + linecnt);
+      out.write(String.format("}\n#line %d \"%s\"\n", lineno.get(), lemp.outname).getBytes());
+    }
+    if (rp.lhsalias != null && lhsused == 0) {
+      Error.msg(lemp.filename, rp.ruleline,
+              "Label \"%s\" for \"%s(%s)\" is never used.",
+              rp.lhsalias, rp.lhs.name, rp.lhsalias);
+      lemp.errorcnt++;
+    }
+    for (i = 0; i < rp.nrhs; i++) {
+      if (rp.rhsalias[i] != null && used[i] == 0) {
+        Error.msg(lemp.filename, rp.ruleline,
+                "Label $%s$ for \"%s(%s)\" is never used.",
+                rp.rhsalias[i], rp.rhs[i].name, rp.rhsalias[i]);
+        lemp.errorcnt++;
+      } else if (rp.rhsalias[i] == null) {
+        if (hasDestructor(rp.rhs[i], lemp) != 0) {
+          out.write(String.format("  yy_destructor(%d,&yymsp[%d].minor);\n",
+                  rp.rhs[i].index, i - rp.nrhs + 1).getBytes());
+          lineno.set(lineno.get() + 1);
+        } else {
+          out.write(String.format("        /* No destructor defined for %s */\n",
+                  rp.rhs[i].name).getBytes());
+          lineno.set(lineno.get() + 1);
+        }
+      }
+    }
+  }
   //
   ///*
   //** Print the definition of the union used for the parser's data stack.
@@ -463,21 +443,21 @@ public class Report {
   //  /* Print out the definition of YYTOKENTYPE and YYMINORTYPE */
   //  name = lemp.name ? lemp.name : "Parse";
   //  lineno = *plineno;
-  //  if( mhflag ){ fprintf(out,"#if INTERFACE\n"); lineno++; }
-  //  fprintf(out,"#define %sTOKENTYPE %s\n",name,
+  //  if( mhflag ){ out.write(String.format("#if INTERFACE\n"); lineno++; }
+  //  out.write(String.format("#define %sTOKENTYPE %s\n",name,
   //    lemp.tokentype?lemp.tokentype:"void*");  lineno++;
-  //  if( mhflag ){ fprintf(out,"#endif\n"); lineno++; }
-  //  fprintf(out,"typedef union {\n"); lineno++;
-  //  fprintf(out,"  %sTOKENTYPE yy0;\n",name); lineno++;
+  //  if( mhflag ){ out.write(String.format("#endif\n"); lineno++; }
+  //  out.write(String.format("typedef union {\n"); lineno++;
+  //  out.write(String.format("  %sTOKENTYPE yy0;\n",name); lineno++;
   //  for(i=0; i<arraysize; i++){
   //    if( types[i]==0 ) continue;
-  //    fprintf(out,"  %s yy%d;\n",types[i],i+1); lineno++;
+  //    out.write(String.format("  %s yy%d;\n",types[i],i+1); lineno++;
   //    free(types[i]);
   //  }
-  //  fprintf(out,"  int yy%d;\n",lemp.errsym.dtnum); lineno++;
+  //  out.write(String.format("  int yy%d;\n",lemp.errsym.dtnum); lineno++;
   //  free(stddt);
   //  free(types);
-  //  fprintf(out,"} YYMINORTYPE;\n"); lineno++;
+  //  out.write(String.format("} YYMINORTYPE;\n"); lineno++;
   //  *plineno = lineno;
   //}
   //
@@ -510,7 +490,7 @@ public class Report {
   //  tplt_print(out,lemp,lemp.include,lemp.includeln,&lineno);
   //  if( mhflag ){
   //    char *name = file_makename(lemp, ".h");
-  //    fprintf(out,"#include \"%s\"\n", name); lineno++;
+  //    out.write(String.format("#include \"%s\"\n", name); lineno++;
   //    free(name);
   //  }
   //  tplt_xfer(lemp.name,in,out,&lineno);
@@ -518,39 +498,39 @@ public class Report {
   //  /* Generate #defines for all tokens */
   //  if( mhflag ){
   //    char *prefix;
-  //    fprintf(out,"#if INTERFACE\n"); lineno++;
+  //    out.write(String.format("#if INTERFACE\n"); lineno++;
   //    if( lemp.tokenprefix ) prefix = lemp.tokenprefix;
   //    else                    prefix = "";
   //    for(i=1; i<lemp.nterminal; i++){
-  //      fprintf(out,"#define %s%-30s %2d\n",prefix,lemp.symbols[i].name,i);
+  //      out.write(String.format("#define %s%-30s %2d\n",prefix,lemp.symbols[i].name,i);
   //      lineno++;
   //    }
-  //    fprintf(out,"#endif\n"); lineno++;
+  //    out.write(String.format("#endif\n"); lineno++;
   //  }
   //  tplt_xfer(lemp.name,in,out,&lineno);
   //
   //  /* Generate the defines */
-  //  fprintf(out,"/* \001 */\n");
-  //  fprintf(out,"#define YYCODETYPE %s\n",
+  //  out.write(String.format("/* \001 */\n");
+  //  out.write(String.format("#define YYCODETYPE %s\n",
   //    lemp.nsymbol>250?"int":"unsigned char");  lineno++;
-  //  fprintf(out,"#define YYNOCODE %d\n",lemp.nsymbol+1);  lineno++;
-  //  fprintf(out,"#define YYACTIONTYPE %s\n",
+  //  out.write(String.format("#define YYNOCODE %d\n",lemp.nsymbol+1);  lineno++;
+  //  out.write(String.format("#define YYACTIONTYPE %s\n",
   //    lemp.nstate+lemp.nrule>250?"int":"unsigned char");  lineno++;
   //  print_stack_union(out,lemp,&lineno,mhflag);
   //  if( lemp.stacksize ){
   //    if( atoi(lemp.stacksize)<=0 ){
-  //      ErrorMsg(lemp.filename,0,
+  //      Error.msg(lemp.filename,0,
   //"Illegal stack size: [%s].  The stack size should be an integer constant.",
   //        lemp.stacksize);
   //      lemp.errorcnt++;
   //      lemp.stacksize = "100";
   //    }
-  //    fprintf(out,"#define YYSTACKDEPTH %s\n",lemp.stacksize);  lineno++;
+  //    out.write(String.format("#define YYSTACKDEPTH %s\n",lemp.stacksize);  lineno++;
   //  }else{
-  //    fprintf(out,"#define YYSTACKDEPTH 100\n");  lineno++;
+  //    out.write(String.format("#define YYSTACKDEPTH 100\n");  lineno++;
   //  }
   //  if( mhflag ){
-  //    fprintf(out,"#if INTERFACE\n"); lineno++;
+  //    out.write(String.format("#if INTERFACE\n"); lineno++;
   //  }
   //  name = lemp.name ? lemp.name : "Parse";
   //  if( lemp.arg && lemp.arg[0] ){
@@ -558,21 +538,21 @@ public class Report {
   //    i = strlen(lemp.arg);
   //    while( i>=1 && isspace(lemp.arg[i-1]) ) i--;
   //    while( i>=1 && (isalnum(lemp.arg[i-1]) || lemp.arg[i-1]=='_') ) i--;
-  //    fprintf(out,"#define %sARGDECL ,%s\n",name,&lemp.arg[i]);  lineno++;
-  //    fprintf(out,"#define %sXARGDECL %s;\n",name,lemp.arg);  lineno++;
-  //    fprintf(out,"#define %sANSIARGDECL ,%s\n",name,lemp.arg);  lineno++;
+  //    out.write(String.format("#define %sARGDECL ,%s\n",name,&lemp.arg[i]);  lineno++;
+  //    out.write(String.format("#define %sXARGDECL %s;\n",name,lemp.arg);  lineno++;
+  //    out.write(String.format("#define %sANSIARGDECL ,%s\n",name,lemp.arg);  lineno++;
   //  }else{
-  //    fprintf(out,"#define %sARGDECL\n",name);  lineno++;
-  //    fprintf(out,"#define %sXARGDECL\n",name);  lineno++;
-  //    fprintf(out,"#define %sANSIARGDECL\n",name);  lineno++;
+  //    out.write(String.format("#define %sARGDECL\n",name);  lineno++;
+  //    out.write(String.format("#define %sXARGDECL\n",name);  lineno++;
+  //    out.write(String.format("#define %sANSIARGDECL\n",name);  lineno++;
   //  }
   //  if( mhflag ){
-  //    fprintf(out,"#endif\n"); lineno++;
+  //    out.write(String.format("#endif\n"); lineno++;
   //  }
-  //  fprintf(out,"#define YYNSTATE %d\n",lemp.nstate);  lineno++;
-  //  fprintf(out,"#define YYNRULE %d\n",lemp.nrule);  lineno++;
-  //  fprintf(out,"#define YYERRORSYMBOL %d\n",lemp.errsym.index);  lineno++;
-  //  fprintf(out,"#define YYERRSYMDT yy%d\n",lemp.errsym.dtnum);  lineno++;
+  //  out.write(String.format("#define YYNSTATE %d\n",lemp.nstate);  lineno++;
+  //  out.write(String.format("#define YYNRULE %d\n",lemp.nrule);  lineno++;
+  //  out.write(String.format("#define YYERRORSYMBOL %d\n",lemp.errsym.index);  lineno++;
+  //  out.write(String.format("#define YYERRSYMDT yy%d\n",lemp.errsym.dtnum);  lineno++;
   //  tplt_xfer(lemp.name,in,out,&lineno);
   //
   //  /* Generate the action table.
@@ -641,23 +621,23 @@ public class Report {
   //    }
   //
   //    /* Print the hash table */
-  //    fprintf(out,"/* State %d */\n",stp.index); lineno++;
+  //    out.write(String.format("/* State %d */\n",stp.index); lineno++;
   //    for(j=0; j<tablesize; j++){
   //      if( table[j]==0 ){
-  //        fprintf(out,
+  //        out.write(String.format(
   //          "  {YYNOCODE,0,0}, /* Unused */\n");
   //      }else{
-  //        fprintf(out,"  {%4d,%4d, ",
+  //        out.write(String.format("  {%4d,%4d, ",
   //          table[j].sp.index,
   //          compute_action(lemp,table[j]));
   //        if( collide[j]>=0 ){
-  //          fprintf(out,"&yyActionTable[%4d] }, /* ",
+  //          out.write(String.format("&yyActionTable[%4d] }, /* ",
   //            collide[j] + tablecnt);
   //        }else{
-  //          fprintf(out,"0                    }, /* ");
+  //          out.write(String.format("0                    }, /* ");
   //        }
   //        PrintAction(table[j],out,22);
-  //        fprintf(out," */\n");
+  //        out.write(String.format(" */\n");
   //      }
   //      lineno++;
   //    }
@@ -682,7 +662,7 @@ public class Report {
   //    stp = lemp.sorted[i];
   //    tablesize = 1;
   //    while( tablesize<stp.naction ) tablesize += tablesize;
-  //    fprintf(out,"  { &yyActionTable[%d], %d, %d},\n",
+  //    out.write(String.format("  { &yyActionTable[%d], %d, %d},\n",
   //      stp.tabstart,
   //      tablesize - 1,
   //      stp.tabdfltact); lineno++;
@@ -692,10 +672,10 @@ public class Report {
   //  /* Generate a table containing the symbolic name of every symbol */
   //  for(i=0; i<lemp.nsymbol; i++){
   //    sprintf(line,"\"%s\",",lemp.symbols[i].name);
-  //    fprintf(out,"  %-15s",line);
-  //    if( (i&3)==3 ){ fprintf(out,"\n"); lineno++; }
+  //    out.write(String.format("  %-15s",line);
+  //    if( (i&3)==3 ){ out.write(String.format("\n"); lineno++; }
   //  }
-  //  if( (i&3)!=0 ){ fprintf(out,"\n"); lineno++; }
+  //  if( (i&3)!=0 ){ out.write(String.format("\n"); lineno++; }
   //  tplt_xfer(lemp.name,in,out,&lineno);
   //
   //  /* Generate code which executes every time a symbol is popped from
@@ -705,20 +685,20 @@ public class Report {
   //    for(i=0; i<lemp.nsymbol; i++){
   //      struct symbol *sp = lemp.symbols[i];
   //      if( sp==0 || sp.type!=TERMINAL ) continue;
-  //      fprintf(out,"    case %d:\n",sp.index); lineno++;
+  //      out.write(String.format("    case %d:\n",sp.index); lineno++;
   //    }
   //    for(i=0; i<lemp.nsymbol && lemp.symbols[i].type!=TERMINAL; i++);
   //    if( i<lemp.nsymbol ){
   //      emit_destructor_code(out,lemp.symbols[i],lemp,&lineno);
-  //      fprintf(out,"      break;\n"); lineno++;
+  //      out.write(String.format("      break;\n"); lineno++;
   //    }
   //  }
   //  for(i=0; i<lemp.nsymbol; i++){
   //    struct symbol *sp = lemp.symbols[i];
   //    if( sp==0 || sp.type==TERMINAL || sp.destructor==0 ) continue;
-  //    fprintf(out,"    case %d:\n",sp.index); lineno++;
+  //    out.write(String.format("    case %d:\n",sp.index); lineno++;
   //    emit_destructor_code(out,lemp.symbols[i],lemp,&lineno);
-  //    fprintf(out,"      break;\n"); lineno++;
+  //    out.write(String.format("      break;\n"); lineno++;
   //  }
   //  tplt_xfer(lemp.name,in,out,&lineno);
   //
@@ -732,18 +712,18 @@ public class Report {
   //  ** sequentually beginning with 0.
   //  */
   //  for(rp=lemp.rule; rp; rp=rp.next){
-  //    fprintf(out,"  { %d, %d },\n",rp.lhs.index,rp.nrhs); lineno++;
+  //    out.write(String.format("  { %d, %d },\n",rp.lhs.index,rp.nrhs); lineno++;
   //  }
   //  tplt_xfer(lemp.name,in,out,&lineno);
   //
   //  /* Generate code which execution during each REDUCE action */
   //  for(rp=lemp.rule; rp; rp=rp.next){
-  //    fprintf(out,"      case %d:\n",rp.index); lineno++;
-  //    fprintf(out,"        YYTRACE(\"%s ::=",rp.lhs.name);
-  //    for(i=0; i<rp.nrhs; i++) fprintf(out," %s",rp.rhs[i].name);
-  //    fprintf(out,"\")\n"); lineno++;
+  //    out.write(String.format("      case %d:\n",rp.index); lineno++;
+  //    out.write(String.format("        YYTRACE(\"%s ::=",rp.lhs.name);
+  //    for(i=0; i<rp.nrhs; i++) out.write(String.format(" %s",rp.rhs[i].name);
+  //    out.write(String.format("\")\n"); lineno++;
   //    emit_code(out,rp,lemp,&lineno);
-  //    fprintf(out,"        break;\n"); lineno++;
+  //    out.write(String.format("        break;\n"); lineno++;
   //  }
   //  tplt_xfer(lemp.name,in,out,&lineno);
   //
@@ -794,7 +774,7 @@ public class Report {
   //  out = file_open(lemp,".h","w");
   //  if( out ){
   //    for(i=1; i<lemp.nterminal; i++){
-  //      fprintf(out,"#define %s%-30s %2d\n",prefix,lemp.symbols[i].name,i);
+  //      out.write(String.format("#define %s%-30s %2d\n",prefix,lemp.symbols[i].name,i);
   //    }
   //    fclose(out);
   //  }

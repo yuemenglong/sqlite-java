@@ -15,6 +15,7 @@ public class Parse {
   @SuppressWarnings({"DuplicateExpressions", "IfCanBeSwitch"})
   public static void parseonetoken(Pstate psp) {
     String x = new String(psp.buf, psp.tokenstart, psp.tokenend - psp.tokenstart);
+    byte[] b = x.getBytes();
 //    String x = Strsafe.safe(psp.tokenstart);
     switch (psp.state) {
       case INITIALIZE:
@@ -24,14 +25,14 @@ public class Parse {
         psp.lastrule = null;
         psp.gp.nrule = 0;
       case WAITING_FOR_DECL_OR_RULE:
-        if (x.charAt(0) == '%') {
+        if (b[0] == '%') {
           psp.state = WAITING_FOR_DECL_KEYWORD;
-        } else if (islower(x.charAt(0))) {
+        } else if (islower(b[0])) {
           psp.lhs = Symbol.new_(x);
           psp.nrhs = 0;
           psp.lhsalias = null;
           psp.state = WAITING_FOR_ARROW;
-        } else if (x.charAt(0) == '{') {
+        } else if (b[0] == '{') {
           if (psp.prevrule == null) {
             Error.msg(psp.filename, psp.tokenlineno,
                     "There is not prior rule opon which to attach the code " +
@@ -56,7 +57,7 @@ public class Parse {
         }
         break;
       case PRECEDENCE_MARK_1:
-        if (!isupper(x.charAt(0))) {
+        if (!isupper(b[0])) {
           Error.msg(psp.filename, psp.tokenlineno,
                   "The precedence symbol must be a terminal.");
           psp.errorcnt++;
@@ -75,7 +76,7 @@ public class Parse {
         psp.state = PRECEDENCE_MARK_2;
         break;
       case PRECEDENCE_MARK_2:
-        if (x.charAt(0) != ']') {
+        if (b[0] != ']') {
           Error.msg(psp.filename, psp.tokenlineno,
                   "Missing \"]\" on precedence mark.");
           psp.errorcnt++;
@@ -83,9 +84,9 @@ public class Parse {
         psp.state = WAITING_FOR_DECL_OR_RULE;
         break;
       case WAITING_FOR_ARROW:
-        if (x.charAt(0) == ':' && x.charAt(1) == ':' && x.charAt(2) == '=') {
+        if (b[0] == ':' && x.charAt(1) == ':' && x.charAt(2) == '=') {
           psp.state = IN_RHS;
-        } else if (x.charAt(0) == '(') {
+        } else if (b[0] == '(') {
           psp.state = LHS_ALIAS_1;
         } else {
           Error.msg(psp.filename, psp.tokenlineno,
@@ -96,7 +97,7 @@ public class Parse {
         }
         break;
       case LHS_ALIAS_1:
-        if (isalpha(x.charAt(0))) {
+        if (isalpha(b[0])) {
           psp.lhsalias = x;
           psp.state = LHS_ALIAS_2;
         } else {
@@ -108,7 +109,7 @@ public class Parse {
         }
         break;
       case LHS_ALIAS_2:
-        if (x.charAt(0) == ')') {
+        if (b[0] == ')') {
           psp.state = LHS_ALIAS_3;
         } else {
           Error.msg(psp.filename, psp.tokenlineno,
@@ -118,7 +119,7 @@ public class Parse {
         }
         break;
       case LHS_ALIAS_3:
-        if (x.charAt(0) == ':' && x.charAt(1) == ':' && x.charAt(2) == '=') {
+        if (b[0] == ':' && x.charAt(1) == ':' && x.charAt(2) == '=') {
           psp.state = IN_RHS;
         } else {
           Error.msg(psp.filename, psp.tokenlineno,
@@ -129,7 +130,7 @@ public class Parse {
         }
         break;
       case IN_RHS:
-        if (x.charAt(0) == '.') {
+        if (b[0] == '.') {
           // 1 Rule + psp.nrhs Symbol + psp.nrhs char*
           Rule rp = new Rule();
           rp.ruleline = psp.tokenlineno;
@@ -156,7 +157,7 @@ public class Parse {
           psp.lastrule = rp;
           psp.prevrule = rp;
           psp.state = WAITING_FOR_DECL_OR_RULE;
-        } else if (isalpha(x.charAt(0))) {
+        } else if (isalpha(b[0])) {
           if (psp.nrhs >= MAXRHS) {
             Error.msg(psp.filename, psp.tokenlineno,
                     "Too many symbol on RHS or rule beginning at \"%s\".",
@@ -168,7 +169,7 @@ public class Parse {
             psp.alias[psp.nrhs] = null;
             psp.nrhs++;
           }
-        } else if (x.charAt(0) == '(' && psp.nrhs > 0) {
+        } else if (b[0] == '(' && psp.nrhs > 0) {
           psp.state = RHS_ALIAS_1;
         } else {
           Error.msg(psp.filename, psp.tokenlineno,
@@ -178,7 +179,7 @@ public class Parse {
         }
         break;
       case RHS_ALIAS_1:
-        if (isalpha(x.charAt(0))) {
+        if (isalpha(b[0])) {
           psp.alias[psp.nrhs - 1] = x;
           psp.state = RHS_ALIAS_2;
         } else {
@@ -190,7 +191,7 @@ public class Parse {
         }
         break;
       case RHS_ALIAS_2:
-        if (x.charAt(0) == ')') {
+        if (b[0] == ')') {
           psp.state = IN_RHS;
         } else {
           Error.msg(psp.filename, psp.tokenlineno,
@@ -200,7 +201,7 @@ public class Parse {
         }
         break;
       case WAITING_FOR_DECL_KEYWORD:
-        if (isalpha(x.charAt(0))) {
+        if (isalpha(b[0])) {
           psp.declkeyword = x;
           psp.declargslot = null;
           psp.decllnslot = null;
@@ -281,7 +282,7 @@ public class Parse {
         }
         break;
       case WAITING_FOR_DESTRUCTOR_SYMBOL:
-        if (!isalpha(x.charAt(0))) {
+        if (!isalpha(b[0])) {
           Error.msg(psp.filename, psp.tokenlineno,
                   "Symbol name missing after %destructor keyword");
           psp.errorcnt++;
@@ -294,7 +295,7 @@ public class Parse {
         }
         break;
       case WAITING_FOR_DATATYPE_SYMBOL:
-        if (!isalpha(x.charAt(0))) {
+        if (!isalpha(b[0])) {
           Error.msg(psp.filename, psp.tokenlineno,
                   "Symbol name missing after %destructor keyword");
           psp.errorcnt++;
@@ -307,9 +308,9 @@ public class Parse {
         }
         break;
       case WAITING_FOR_PRECEDENCE_SYMBOL:
-        if (x.charAt(0) == '.') {
+        if (b[0] == '.') {
           psp.state = WAITING_FOR_DECL_OR_RULE;
-        } else if (isupper(x.charAt(0))) {
+        } else if (isupper(b[0])) {
           Symbol sp = Symbol.new_(x);
           if (sp.prec >= 0) {
             Error.msg(psp.filename, psp.tokenlineno,
@@ -326,16 +327,16 @@ public class Parse {
         }
         break;
       case WAITING_FOR_DECL_ARG:
-        if (x.charAt(0) == '{' || x.charAt(0) == '\"' || isalnum(x.charAt(0))) {
+        if (b[0] == '{' || b[0] == '\"' || isalnum(b[0])) {
           if (psp.declargslot.get() != null) {
             Error.msg(psp.filename, psp.tokenlineno,
                     "The argument \"%s\" to declaration \"%%%s\" is not the first."
-//                    x.charAt(0) == '\"' ? & x[1] :x, psp.declkeyword
+//                    b[0] == '\"' ? & x[1] :x, psp.declkeyword
             );
             psp.errorcnt++;
             psp.state = RESYNC_AFTER_DECL_ERROR;
           } else {
-            psp.declargslot.set(x.charAt(0) == '\"' || x.charAt(0) == '(' ? x.substring(1) : x);
+            psp.declargslot.set(b[0] == '\"' || b[0] == '(' ? x.substring(1) : x);
             if (psp.decllnslot != null) psp.decllnslot.set(psp.tokenlineno);
             psp.state = WAITING_FOR_DECL_OR_RULE;
           }
@@ -347,11 +348,11 @@ public class Parse {
         }
         break;
       case RESYNC_AFTER_RULE_ERROR:
-        if (x.charAt(0) == '.') psp.state = WAITING_FOR_DECL_OR_RULE;
+        if (b[0] == '.') psp.state = WAITING_FOR_DECL_OR_RULE;
         break;
       case RESYNC_AFTER_DECL_ERROR:
-        if (x.charAt(0) == '.') psp.state = WAITING_FOR_DECL_OR_RULE;
-        if (x.charAt(0) == '%') psp.state = WAITING_FOR_DECL_KEYWORD;
+        if (b[0] == '.') psp.state = WAITING_FOR_DECL_OR_RULE;
+        if (b[0] == '%') psp.state = WAITING_FOR_DECL_KEYWORD;
         break;
     }
   }
@@ -362,7 +363,7 @@ public class Parse {
     byte[] filebuf;
     int filesize;
     int lineno;
-    int c;
+    byte c;
     int cp;
     int nextcp;
     int startline = 0;
@@ -385,7 +386,7 @@ public class Parse {
     byte[] b = filebuf;
     for (cp = 0; (c = b[cp]) != 0; ) {
       if (c == '\n') lineno++;
-      if (isspace((char) c)) {
+      if (isspace(c)) {
         cp++;
         continue;
       }
@@ -458,8 +459,8 @@ public class Parse {
         } else {
           nextcp = cp + 1;
         }
-      } else if (isalnum((char) c)) {
-        while ((c = b[cp]) != 0 && (isalnum((char) c) || c == '_')) cp++;
+      } else if (isalnum((byte) c)) {
+        while ((c = b[cp]) != 0 && (isalnum(c) || c == '_')) cp++;
         nextcp = cp;
       } else if (c == ':' && b[cp + 1] == ':' && b[cp + 2] == '=') {
         cp += 3;
@@ -472,7 +473,7 @@ public class Parse {
       b[cp] = 0;
       ps.tokenend = cp;
       parseonetoken(ps);
-      b[cp] = (byte) c;
+      b[cp] = c;
       cp = nextcp;
     }
     gp.rule = ps.firstrule;

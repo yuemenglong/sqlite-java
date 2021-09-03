@@ -40,7 +40,7 @@ public class Symbol {
     if (sp == null) {
       sp = new Symbol();
       sp.name = Strsafe.safe(x);
-      sp.type = isupper(x.charAt(0)) ? SymbolType.TERMINAL : SymbolType.NONTERMINAL;
+      sp.type = isupper((byte) x.charAt(0)) ? SymbolType.TERMINAL : SymbolType.NONTERMINAL;
       sp.rule = null;
       sp.prec = -1;
       sp.assoc = Assoc.UNK;
