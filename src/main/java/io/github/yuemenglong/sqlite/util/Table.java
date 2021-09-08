@@ -22,17 +22,7 @@ public class Table<K, V> {
   private Function<K, Integer> hash;
   private BiFunction<K, K, Integer> comp;
 
-  public void init(int n) {
-    if (tbl != null) {
-      return;
-    }
-    size = n;
-    count = 0;
-    tbl = new TableNode[size];
-    for (int i = 0; i < size; i++) {
-      tbl[i] = new TableNode<>();
-    }
-    ht = new TableNode[size];
+  public Table() {
     hash = Object::hashCode;
     comp = (a, b) -> {
       if (a == null) {
@@ -45,6 +35,19 @@ public class Table<K, V> {
         return Integer.compare(a.hashCode(), b.hashCode());
       }
     };
+  }
+
+  public void init(int n) {
+    if (tbl != null) {
+      return;
+    }
+    size = n;
+    count = 0;
+    tbl = new TableNode[size];
+    for (int i = 0; i < size; i++) {
+      tbl[i] = new TableNode<>();
+    }
+    ht = new TableNode[size];
   }
 
   public void setHasher(Function<K, Integer> hash) {

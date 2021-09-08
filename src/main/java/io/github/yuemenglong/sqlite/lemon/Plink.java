@@ -7,6 +7,15 @@ public class Plink {
   public Config cfp;      /* The configuration to which linked */
   public Plink next;      /* The next propagate link */
 
+  @Override
+  public String toString() {
+    String ns = "null";
+    if (next != null) {
+      ns = next.toString();
+    }
+    return String.format("%s -> %s", cfp, ns);
+  }
+
   private static Plink freelist = null;
 
   public static Plink new_() {

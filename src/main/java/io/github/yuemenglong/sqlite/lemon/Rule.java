@@ -1,5 +1,8 @@
 package io.github.yuemenglong.sqlite.lemon;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class Rule {
   public Symbol lhs;      /* Left-hand side of the rule */
   public String lhsalias;          /* Alias for the LHS (NULL if none) */
@@ -14,4 +17,10 @@ public class Rule {
   public Boolean canReduce;       /* True if this rule is ever reduced */
   public Rule nextlhs;    /* Next rule with the same LHS */
   public Rule next;       /* Next rule in the global list */
+
+  @Override
+  public String toString() {
+    String right = Arrays.stream(rhs).map(String::valueOf).collect(Collectors.joining(" "));
+    return String.format("%s ::= %s.", lhs, right);
+  }
 }

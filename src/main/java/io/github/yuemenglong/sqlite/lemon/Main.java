@@ -13,7 +13,7 @@ import static java.lang.System.exit;
 
 public class Main {
   public static void main(String[] args) throws IOException {
-    main0(new String[]{"D:/lemon.y"});
+    main0(new String[]{"D:/workspace/java/sqlite-java/work/lemon.y"});
   }
 
   /* The main program.  Parse the command line and do it... */

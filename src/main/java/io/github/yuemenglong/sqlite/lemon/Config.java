@@ -2,6 +2,7 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.util.Table;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Config {
@@ -20,6 +21,11 @@ public class Config {
   public Status status;
   public Config next;     /* Next configuration in the state */
   public Config bp;       /* The next basis configuration */
+
+  @Override
+  public String toString() {
+    return String.format("(%d)%s", dot, rp);
+  }
 
   private static Table<Config, Config> x4a;
 

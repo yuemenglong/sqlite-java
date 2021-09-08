@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static io.github.yuemenglong.sqlite.lemon.Action.Type.NOT_USED;
 import static io.github.yuemenglong.sqlite.lemon.Action.Type.REDUCE;
 import static io.github.yuemenglong.sqlite.lemon.Common.MAXRHS;
+import static io.github.yuemenglong.sqlite.lemon.Symbol.SymbolType.NONTERMINAL;
 import static io.github.yuemenglong.sqlite.lemon.Symbol.SymbolType.TERMINAL;
 import static io.github.yuemenglong.sqlite.util.Util.*;
 
@@ -17,11 +18,15 @@ public class Report {
   public static String fileMakeName(Lemon lemp, String suffix) {
     String name = lemp.filename;
     name = name.substring(0, name.indexOf('.'));
-    return String.format("%s.%s", name, suffix);
+    return String.format("%s%s", name, suffix);
   }
 
   public static FileInputStream fileOpenRead(Lemon lemp, String suffix) throws FileNotFoundException {
-    return new FileInputStream(fileMakeName(lemp, suffix));
+    try {
+      return new FileInputStream(fileMakeName(lemp, suffix));
+    } catch (Throwable e) {
+      return null;
+    }
   }
 
   public static FileOutputStream fileOpenWrite(Lemon lemp, String suffix) throws FileNotFoundException {
@@ -201,11 +206,13 @@ public class Report {
     return act;
   }
 
-  public static void tpltXfer(String name, InputStream in, OutputStream out, Addr<Integer> lineno) throws IOException {
+  public static void tpltXfer(String name, BufferedReader br, OutputStream out, Addr<Integer> lineno) throws IOException {
     int i, iStart;
     String line;
-    BufferedReader br = new BufferedReader(new InputStreamReader(in));
-    while ((line = br.readLine()) != null && (line.charAt(0) != '%' || line.charAt(1) != '%')) {
+    while ((line = br.readLine()) != null) {
+      if (line.length() >= 2 && line.charAt(0) == '%' && line.charAt(1) == '%') {
+        break;
+      }
       lineno.set(lineno.get() + 1);
       iStart = 0;
       if (name != null) {
@@ -221,6 +228,7 @@ public class Report {
         }
       }
       out.write(line.substring(iStart).getBytes());
+      out.write("\n".getBytes());
     }
   }
 
@@ -386,6 +394,10 @@ public class Report {
         sp.dtnum = arraysize + 1;
         continue;
       }
+      if (sp.type != NONTERMINAL || sp.datatype == null) {
+        sp.dtnum = 0;
+        continue;
+      }
       String s = sp.datatype;
       byte[] b = s.getBytes();
       cp = 0;
@@ -459,14 +471,15 @@ public class Report {
     }
     OutputStream out = fileOpenWrite(lemp, ".c");
     lineno.set(1);
-    tpltXfer(lemp.name, in, out, plineno);
+    BufferedReader br = new BufferedReader(new InputStreamReader(in));
+    tpltXfer(lemp.name, br, out, plineno);
     tpltPrint(out, lemp, lemp.include, lemp.includeln, plineno);
     if (mhflag != 0) {
       name = fileMakeName(lemp, ".h");
       out.write(String.format("#include \"%s\"\n", name).getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
     if (mhflag != 0) {
       String prefix;
       out.write("#if INTERFACE\n".getBytes());
@@ -480,7 +493,7 @@ public class Report {
       out.write("#endif\n".getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
     /* Generate the defines */
     out.write("/* \001 */\n".getBytes());
     out.write(String.format("#define YYCODETYPE %s\n",
@@ -511,8 +524,8 @@ public class Report {
       lineno.incrementAndGet();
     }
     name = lemp.name != null ? lemp.name : "Parse";
-    byte[] arg = lemp.arg.getBytes();
-    if (lemp.arg != null && arg[0] != 0) {
+    if (lemp.arg != null && lemp.arg.charAt(0) != 0) {
+      byte[] arg = lemp.arg.getBytes();
       i = (arg.length);
       while (i >= 1 && isspace(arg[i - 1])) i--;
       while (i >= 1 && (isalnum(arg[i - 1]) || arg[i - 1] == '_')) i--;
@@ -542,7 +555,7 @@ public class Report {
     lineno.incrementAndGet();
     out.write(String.format("#define YYERRSYMDT yy%d\n", lemp.errsym.dtnum).getBytes());
     lineno.incrementAndGet();
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     tablecnt = 0;
 
@@ -619,7 +632,7 @@ public class Report {
       /* Update the table count */
       tablecnt += tablesize;
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
     lemp.tablesize = tablecnt;
 
     for (i = 0; i < lemp.nstate; i++) {
@@ -633,7 +646,7 @@ public class Report {
               stp.tabdfltact).getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate a table containing the symbolic name of every symbol */
     for (i = 0; i < lemp.nsymbol; i++) {
@@ -648,7 +661,7 @@ public class Report {
       out.write("\n".getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which executes every time a symbol is popped from
      ** the stack while processing errors or while destroying the parser.
@@ -677,11 +690,11 @@ public class Report {
       out.write("      break;\n".getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which executes whenever the parser stack overflows */
     tpltPrint(out, lemp, lemp.overflow, lemp.overflowln, plineno);
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate the table of rule information
      **
@@ -692,7 +705,7 @@ public class Report {
       out.write(String.format("  { %d, %d },\n", rp.lhs.index, rp.nrhs).getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which execution during each REDUCE action */
     for (rp = lemp.rule; rp != null; rp = rp.next) {
@@ -706,19 +719,19 @@ public class Report {
       out.write("        break;\n".getBytes());
       lineno.incrementAndGet();
     }
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which executes if a parse fails */
     tpltPrint(out, lemp, lemp.failure, lemp.failureln, plineno);
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which executes when a syntax error occurs */
     tpltPrint(out, lemp, lemp.error, lemp.errorln, plineno);
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which executes when the parser accepts its input */
     tpltPrint(out, lemp, lemp.accept, lemp.acceptln, plineno);
-    tpltXfer(lemp.name, in, out, plineno);
+    tpltXfer(lemp.name, br, out, plineno);
 
     /* Append any addition code the user desires */
     tpltPrint(out, lemp, lemp.extracode, lemp.extracodeln, plineno);
@@ -731,20 +744,22 @@ public class Report {
     String prefix;
     String line;
     String pattern;
-    int i;
+    int i = 0;
 
     if (lemp.tokenprefix != null) prefix = lemp.tokenprefix;
     else prefix = "";
     FileInputStream in = fileOpenRead(lemp, ".h");
-    BufferedReader br = new BufferedReader(new InputStreamReader(in));
-    for (i = 1; i < lemp.nterminal && (line = br.readLine()) != null; i++) {
-      pattern = String.format("#define %s%-30s %2d\n", prefix, lemp.symbols[i].name, i);
-      if (strcmp(line, pattern) != 0) break;
-    }
-    in.close();
-    if (i == lemp.nterminal) {
-      /* No change in the file.  Don't rewrite it. */
-      return;
+    if (in != null) {
+      BufferedReader br = new BufferedReader(new InputStreamReader(in));
+      for (i = 1; i < lemp.nterminal && (line = br.readLine()) != null; i++) {
+        pattern = String.format("#define %s%-30s %2d\n", prefix, lemp.symbols[i].name, i);
+        if (strcmp(line, pattern) != 0) break;
+      }
+      in.close();
+      if (i == lemp.nterminal) {
+        /* No change in the file.  Don't rewrite it. */
+        return;
+      }
     }
     FileOutputStream out = fileOpenWrite(lemp, ".h");
     for (i = 1; i < lemp.nterminal; i++) {

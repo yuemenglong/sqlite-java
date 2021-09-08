@@ -2,6 +2,8 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.util.Table;
 
+import java.util.Arrays;
+
 import static io.github.yuemenglong.sqlite.util.Util.isupper;
 
 public class Symbol {
@@ -86,4 +88,8 @@ public class Symbol {
     return x2a.arrayOf(Symbol.class);
   }
 
+  @Override
+  public String toString() {
+    return String.valueOf(name);
+  }
 }
