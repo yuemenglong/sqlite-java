@@ -22,7 +22,10 @@
 **
 ** Modified 1997 to make it suitable for use with makeheaders.
 */
-class LemPar{
+import java.io.IOException;
+import java.io.OutputStream;
+
+class lemon {
 /* First off, code is include which follows the "include" declaration
 ** in the input file. */
 //#include <stdio.h>
@@ -74,9 +77,9 @@ class LemPar{
 **                       defined, then do no error processing.
 */
 %%
-public static int YY_NO_ACTION     = (YYNSTATE+YYNRULE+2)
-public static int YY_ACCEPT_ACTION = (YYNSTATE+YYNRULE+1)
-public static int YY_ERROR_ACTION  = (YYNSTATE+YYNRULE)
+public static int YY_NO_ACTION     = (YYNSTATE+YYNRULE+2);
+public static int YY_ACCEPT_ACTION = (YYNSTATE+YYNRULE+1);
+public static int YY_ERROR_ACTION  = (YYNSTATE+YYNRULE);
 /* Next is the action table.  Each entry in this table contains
 **
 **  +  An integer which is the number representing the look-ahead
@@ -99,15 +102,22 @@ public static int YY_ERROR_ACTION  = (YYNSTATE+YYNRULE)
 public static class yyActionEntry {
   public YYCODETYPE   lookahead;   /* The value of the look-ahead token */
   public YYACTIONTYPE action;      /* Action to take for this look-ahead */
-  public yyActionEntry next; /* Next look-ahead with the same hash, or NULL */
+  public int next; /* Next look-ahead with the same hash, or NULL */
 
-  public yyActionEntry(YYCODETYPE lookahead, YYACTIONTYPE action, yyActionEntry next){
+  public yyActionEntry(YYCODETYPE lookahead, YYACTIONTYPE action, int next){
     this.lookahead = lookahead;
     this.action = action;
     this.next = next;
   }
+
+  public yyActionEntry next(){
+    if(next < 0){
+      return null;
+    }
+    return yyActionTable[next];
+  }
 };
-public static yyActionEntry yyActionTable[] = {
+public static yyActionEntry[] yyActionTable = {
 %%
 };
 
@@ -135,7 +145,7 @@ public static class yyStateEntry {
     this.actionDefault = actionDefault;
   }
 };
-public static yyStateEntry yyStateTable[] = {
+public static yyStateEntry[] yyStateTable = {
 %%
 };
 
@@ -205,8 +215,18 @@ public static String[] yyTokenName = {
 %%
 };
 
+public static void trace(byte[] bs){
+  try{
+    if(yyTraceFILE != null){
+      yyTraceFILE.write(bs);
+    }
+  } catch (IOException e) {
+    e.printStackTrace();
+  }
+}
+
 public static void YYTRACE(Object X){
-  if( yyTraceFILE ) yyTraceFILE.write(String.format("%sReduce [%s].\n",yyTracePrompt,X).getBytes());
+  trace(String.format("%sReduce [%s].\n",yyTracePrompt,X).getBytes());
 }
 //#define YYTRACE(X) if( yyTraceFILE ) yyTraceFILE.write(String.format("%sReduce [%s].\n",yyTracePrompt,X);
 //#else
@@ -272,7 +292,7 @@ public static int yy_pop_parser_stack(yyParser pParser){
   if( pParser.idx<0 ) return 0;
 //#ifndef NDEBUG
   if( yyTraceFILE!=null && pParser.idx>=0 ){
-    yyTraceFILE.write(String.format("%sPopping %s\n",
+    trace(String.format("%sPopping %s\n",
       yyTracePrompt,
       yyTokenName[pParser.top.major]).getBytes());
   }
@@ -297,15 +317,15 @@ public static int yy_pop_parser_stack(yyParser pParser){
 ** </ul>
 */
 /* SQLITE MODIFICATION: Give the function file scope */
-void ParseFree(
-  void *p,               /* The parser to be deleted */
-  void (*freeProc)()     /* Function used to reclaim memory */
-){
-  yyParser *pParser = (yyParser*)p;
-  if( pParser==0 ) return;
-  while( pParser.idx>=0 ) yy_pop_parser_stack(pParser);
-  (*freeProc)(pParser, __FILE__, __LINE__);
-}
+//void ParseFree(
+//  void *p,               /* The parser to be deleted */
+//  void (*freeProc)()     /* Function used to reclaim memory */
+//){
+//  yyParser *pParser = (yyParser*)p;
+//  if( pParser==0 ) return;
+//  while( pParser.idx>=0 ) yy_pop_parser_stack(pParser);
+//  (*freeProc)(pParser, __FILE__, __LINE__);
+//}
 
 /*
 ** Find the appropriate action for a parser given the look-ahead token.
@@ -315,11 +335,11 @@ void ParseFree(
 ** return YY_NO_ACTION.
 */
 static int yy_find_parser_action(
-  yyParser *pParser,        /* The parser */
+  yyParser pParser,        /* The parser */
   int iLookAhead             /* The look-ahead token */
 ){
-  struct yyStateEntry *pState;   /* Appropriate entry in the state table */
-  struct yyActionEntry *pAction; /* Action appropriate for the look-ahead */
+  yyStateEntry pState;   /* Appropriate entry in the state table */
+  yyActionEntry pAction; /* Action appropriate for the look-ahead */
 
   /* if( pParser.idx<0 ) return YY_NO_ACTION;  */
   pState = &yyStateTable[pParser.top.stateno];
@@ -339,10 +359,10 @@ static int yy_find_parser_action(
 ** Perform a shift action.
 */
 static void yy_shift(
-  yyParser *yypParser,          /* The parser to be shifted */
+  yyParser yypParser,          /* The parser to be shifted */
   int yyNewState,               /* The new state to shift in */
   int yyMajor,                  /* The major token to shift in */
-  YYMINORTYPE *yypMinor         /* Pointer ot the minor token to shift in */
+  YYMINORTYPE yypMinor         /* Pointer ot the minor token to shift in */
 ){
   yypParser.idx++;
   yypParser.top++;
@@ -350,8 +370,8 @@ static void yy_shift(
      yypParser.idx--;
      yypParser.top--;
 //#ifndef NDEBUG
-     if( yyTraceFILE ){
-       yyTraceFILE.write(String.format("%sStack Overflow!\n",yyTracePrompt).getBytes());
+     if( yyTraceFILE != null){
+       trace(String.format("%sStack Overflow!\n",yyTracePrompt).getBytes());
      }
 //#endif
      while( yypParser.idx>=0 ) yy_pop_parser_stack(yypParser);
@@ -364,13 +384,13 @@ static void yy_shift(
   yypParser.top.major = yyMajor;
   yypParser.top.minor = *yypMinor;
 //#ifndef NDEBUG
-  if( yyTraceFILE && yypParser.idx>0 ){
+  if( yyTraceFILE != null && yypParser.idx>0 ){
     int i;
-    yyTraceFILE.write(String.format("%sShift %d\n",yyTracePrompt,yyNewState).getBytes());
-    yyTraceFILE.write(String.format("%sStack:",yyTracePrompt).getBytes());
+    trace(String.format("%sShift %d\n",yyTracePrompt,yyNewState).getBytes());
+    trace(String.format("%sStack:",yyTracePrompt).getBytes());
     for(i=1; i<=yypParser.idx; i++)
-      yyTraceFILE.write(String.format(" %s",yyTokenName[yypParser.stack[i].major]).getBytes());
-    yyTraceFILE.write(String.format("\n").getBytes());
+      trace(String.format(" %s",yyTokenName[yypParser.stack[i].major]).getBytes());
+    trace(String.format("\n").getBytes());
   }
 //#endif
 }
@@ -392,7 +412,7 @@ static void yy_accept();  /* Forward declaration */
 ** follow the reduce.
 */
 static void yy_reduce(
-  yyParser *yypParser,         /* The parser */
+  yyParser yypParser,         /* The parser */
   int yyruleno                 /* Number of the rule by which to reduce */
   ParseANSIARGDECL
 ){
@@ -430,12 +450,12 @@ static void yy_reduce(
 ** The following code executes when the parse fails
 */
 static void yy_parse_failed(
-  yyParser *yypParser           /* The parser */
+  yyParser yypParser           /* The parser */
   ParseANSIARGDECL              /* Extra arguments (if any) */
 ){
 //#ifndef NDEBUG
-  if( yyTraceFILE ){
-    yyTraceFILE.write(String.format("%sFail!\n",yyTracePrompt).getBytes());
+  if( yyTraceFILE != null){
+    trace(String.format("%sFail!\n",yyTracePrompt).getBytes());
   }
 //#endif
   while( yypParser.idx>=0 ) yy_pop_parser_stack(yypParser);
@@ -448,7 +468,7 @@ static void yy_parse_failed(
 ** The following code executes when a syntax error first occurs.
 */
 static void yy_syntax_error(
-  yyParser *yypParser,           /* The parser */
+  yyParser yypParser,           /* The parser */
   int yymajor,                   /* The major type of the error token */
   YYMINORTYPE yyminor            /* The minor type of the error token */
   ParseANSIARGDECL               /* Extra arguments (if any) */
@@ -461,12 +481,12 @@ static void yy_syntax_error(
 ** The following is executed when the parser accepts
 */
 static void yy_accept(
-  yyParser *yypParser           /* The parser */
+  yyParser yypParser           /* The parser */
   ParseANSIARGDECL              /* Extra arguments (if any) */
 ){
 //#ifndef NDEBUG
-  if( yyTraceFILE ){
-    yyTraceFILE.write(String.format("%sAccept!\n",yyTracePrompt).getBytes());
+  if( yyTraceFILE != null){
+    trace(String.format("%sAccept!\n",yyTracePrompt).getBytes());
   }
 //#endif
   while( yypParser.idx>=0 ) yy_pop_parser_stack(yypParser);
@@ -496,7 +516,7 @@ static void yy_accept(
 */
 /* SQLITE MODIFICATION: Give the function file scope */
 void Parse(
-  void *yyp,                   /* The parser */
+  Object yyp,                   /* The parser */
   int yymajor,                 /* The major token code number */
   ParseTOKENTYPE yyminor       /* The value for the token */
   ParseANSIARGDECL
@@ -505,10 +525,10 @@ void Parse(
   int yyact;            /* The parser action. */
   int yyendofinput;     /* True if we are at the end of input */
   int yyerrorhit = 0;   /* True if yymajor has invoked an error */
-  yyParser *yypParser;  /* The parser */
+  yyParser yypParser;  /* The parser */
 
   /* (re)initialize the parser, if necessary */
-  yypParser = (yyParser*)yyp;
+  yypParser = (yyParser)yyp;
   if( yypParser.idx<0 ){
     if( yymajor==0 ) return;
     yypParser.idx = 0;
@@ -521,8 +541,8 @@ void Parse(
   yyendofinput = (yymajor==0);
 
 //#ifndef NDEBUG
-  if( yyTraceFILE ){
-    yyTraceFILE.write(String.format("%sInput %s\n",yyTracePrompt,yyTokenName[yymajor]).getBytes());
+  if( yyTraceFILE != null ){
+    trace(String.format("%sInput %s\n",yyTracePrompt,yyTokenName[yymajor]).getBytes());
   }
 //#endif
 
@@ -540,8 +560,8 @@ void Parse(
       yy_reduce(yypParser,yyact-YYNSTATE ParseARGDECL);
     }else if( yyact == YY_ERROR_ACTION ){
 //#ifndef NDEBUG
-      if( yyTraceFILE ){
-        yyTraceFILE.write(String.format("%sSyntax Error!\n",yyTracePrompt).getBytes());
+      if( yyTraceFILE != null){
+        trace(String.format("%sSyntax Error!\n",yyTracePrompt).getBytes());
       }
 //#endif
 //#ifdef YYERRORSYMBOL
@@ -569,8 +589,8 @@ void Parse(
       }
       if( yypParser.top.major==YYERRORSYMBOL || yyerrorhit ){
 //#ifndef NDEBUG
-        if( yyTraceFILE ){
-          yyTraceFILE.write(String.format("%sDiscard input token %s\n",
+        if( yyTraceFILE != null ){
+          trace(String.format("%sDiscard input token %s\n",
              yyTracePrompt,yyTokenName[yymajor]).getBytes());
         }
 //#endif

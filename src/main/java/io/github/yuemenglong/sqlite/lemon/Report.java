@@ -578,6 +578,7 @@ public class Report {
     tablecnt = 0;
 
     /* Loop over parser states */
+    int idx = 0;
     for (i = 0; i < lemp.nstate; i++) {
       int tablesize;              /* size of the hash table */
       int j, k;                    /* Loop counter */
@@ -629,18 +630,20 @@ public class Report {
       out.write(String.format("/* State %d */\n", stp.index).getBytes());
       lineno.incrementAndGet();
       for (j = 0; j < tablesize; j++) {
+        out.write(String.format("/* %d */", idx).getBytes());
+        idx += 1;
         if (table[j] == null) {
-          out.write("  new yyActionEntry(YYNOCODE,0,null), /* Unused */\n".getBytes());
+          out.write("  new yyActionEntry(YYNOCODE,0,-1), /* Unused */\n".getBytes());
 //          out.write("  {YYNOCODE,0,0}, /* Unused */\n".getBytes());
         } else {
           out.write(String.format("  new yyActionEntry(%4d,%4d, ",
                   table[j].sp.index,
                   computeAction(lemp, table[j])).getBytes());
           if (collide[j] >= 0) {
-            out.write(String.format("yyActionTable[%4d] ), /* ",
+            out.write(String.format("%-4d ), /* ",
                     collide[j] + tablecnt).getBytes());
           } else {
-            out.write("null                ), /* ".getBytes());
+            out.write("-1   ), /* ".getBytes());
           }
           printAction(table[j], out, 22);
           out.write(" */\n".getBytes());
@@ -756,7 +759,8 @@ public class Report {
     tpltPrint(out, lemp, lemp.extracode, lemp.extracodeln, plineno);
 
     in.close();
-    out0.write(out.toByteArray());
+    String outs = new String(out.toByteArray());
+    out0.write(Replacer.doReplace(outs).getBytes());
     out0.close();
     out.close();
   }
