@@ -100,6 +100,12 @@ public static class yyActionEntry {
   public YYCODETYPE   lookahead;   /* The value of the look-ahead token */
   public YYACTIONTYPE action;      /* Action to take for this look-ahead */
   public yyActionEntry next; /* Next look-ahead with the same hash, or NULL */
+
+  public yyActionEntry(YYCODETYPE lookahead, YYACTIONTYPE action, yyActionEntry next){
+    this.lookahead = lookahead;
+    this.action = action;
+    this.next = next;
+  }
 };
 public static yyActionEntry yyActionTable[] = {
 %%

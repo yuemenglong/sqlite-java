@@ -75,4 +75,12 @@ public class Util {
   public static long strtol(String s, int n) {
     return Long.parseLong(s, n);
   }
+
+  public static String FILE() {
+    return Thread.currentThread().getStackTrace()[1].getFileName();
+  }
+
+  public static int LINE() {
+    return Thread.currentThread().getStackTrace()[1].getLineNumber();
+  }
 }

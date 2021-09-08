@@ -2,6 +2,7 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.util.Addr;
 import io.github.yuemenglong.sqlite.util.Assert;
+import io.github.yuemenglong.sqlite.util.Replacer;
 
 import java.io.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -233,7 +234,8 @@ public class Report {
   }
 
   public static InputStream tpltOpen(Lemon lemp) throws FileNotFoundException {
-    String templatename = "lempar.c";
+//    String templatename = "lempar.c";
+    String templatename = "lempar.java";
     String buf;
     String tpltname;
     int cp = strrchr(lemp.filename, '.');
@@ -432,27 +434,33 @@ public class Report {
       out.write("#if INTERFACE\n".getBytes());
       lineno++;
     }
-    out.write(String.format("#define %sTOKENTYPE %s\n", name,
-            lemp.tokentype != null ? lemp.tokentype : "void*").getBytes());
-    lineno++;
+    Replacer.regist(String.format("%sTOKENTYPE", name), lemp.tokentype != null ? lemp.tokentype : "Object");
+//    out.write(String.format("#define %sTOKENTYPE %s\n", name,
+//            lemp.tokentype != null ? lemp.tokentype : "void*").getBytes());
+//    lineno++;
     if (mhflag != 0) {
       out.write("#endif\n".getBytes());
       lineno++;
     }
-    out.write("typedef union {\n".getBytes());
+    out.write("public static class YYMINORTYPE {\n".getBytes());
+//    out.write("typedef union {\n".getBytes());
     lineno++;
-    out.write(String.format("  %sTOKENTYPE yy0;\n", name).getBytes());
+    out.write(String.format("  public %sTOKENTYPE yy0;\n", name).getBytes());
     lineno++;
     for (i = 0; i < arraysize; i++) {
       if (types[i] == null) continue;
-      out.write(String.format("  %s yy%d;\n", types[i], i + 1).getBytes());
+      out.write(String.format("  public %s yy%d;\n", types[i], i + 1).getBytes());
       lineno++;
     }
-    out.write(String.format("  int yy%d;\n", lemp.errsym.dtnum).getBytes());
+    out.write(String.format("  public int yy%d;\n", lemp.errsym.dtnum).getBytes());
     lineno++;
-    out.write("} YYMINORTYPE;\n".getBytes());
+    out.write("}\n".getBytes());
     lineno++;
     plineno.set(lineno);
+  }
+
+  public static void printTemp(ByteArrayOutputStream bos) {
+    System.out.println(new String(bos.toByteArray()));
   }
 
   public static void reportTable(Lemon lemp, int mhflag) throws IOException {
@@ -469,7 +477,8 @@ public class Report {
     if (in == null) {
       throw new RuntimeException("No InputStream");
     }
-    OutputStream out = fileOpenWrite(lemp, ".c");
+    OutputStream out0 = fileOpenWrite(lemp, ".java");
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
     lineno.set(1);
     BufferedReader br = new BufferedReader(new InputStreamReader(in));
     tpltXfer(lemp.name, br, out, plineno);
@@ -496,14 +505,17 @@ public class Report {
     tpltXfer(lemp.name, br, out, plineno);
     /* Generate the defines */
     out.write("/* \001 */\n".getBytes());
-    out.write(String.format("#define YYCODETYPE %s\n",
-            lemp.nsymbol > 250 ? "int" : "unsigned char").getBytes());
-    lineno.incrementAndGet();
-    out.write(String.format("#define YYNOCODE %d\n", lemp.nsymbol + 1).getBytes());
-    lineno.incrementAndGet();
-    out.write(String.format("#define YYACTIONTYPE %s\n",
-            lemp.nstate + lemp.nrule > 250 ? "int" : "unsigned char").getBytes());
-    lineno.incrementAndGet();
+    Replacer.regist("YYCODETYPE", "int");
+//    out.write(String.format("#define YYCODETYPE %s\n",
+//            lemp.nsymbol > 250 ? "int" : "unsigned char").getBytes());
+//    lineno.incrementAndGet();
+    Replacer.regist("YYNOCODE", lemp.nsymbol + 1);
+//    out.write(String.format("#define YYNOCODE %d\n", lemp.nsymbol + 1).getBytes());
+//    lineno.incrementAndGet();
+    Replacer.regist("YYACTIONTYPE", "int");
+//    out.write(String.format("#define YYACTIONTYPE %s\n",
+//            lemp.nstate + lemp.nrule > 250 ? "int" : "unsigned char").getBytes());
+//    lineno.incrementAndGet();
     printStackUnion(out, lemp, plineno, mhflag);
     if (lemp.stacksize != null) {
       if (atoi(lemp.stacksize) <= 0) {
@@ -513,11 +525,13 @@ public class Report {
         lemp.errorcnt++;
         lemp.stacksize = "100";
       }
-      out.write(String.format("#define YYSTACKDEPTH %s\n", lemp.stacksize).getBytes());
-      lineno.incrementAndGet();
+      Replacer.regist("YYSTACKDEPTH", lemp.stacksize);
+//      out.write(String.format("#define YYSTACKDEPTH %s\n", lemp.stacksize).getBytes());
+//      lineno.incrementAndGet();
     } else {
-      out.write("#define YYSTACKDEPTH 100\n".getBytes());
-      lineno.incrementAndGet();
+      Replacer.regist("YYSTACKDEPTH", 100);
+//      out.write("#define YYSTACKDEPTH 100\n".getBytes());
+//      lineno.incrementAndGet();
     }
     if (mhflag != 0) {
       out.write("#if INTERFACE\n".getBytes());
@@ -529,32 +543,36 @@ public class Report {
       i = (arg.length);
       while (i >= 1 && isspace(arg[i - 1])) i--;
       while (i >= 1 && (isalnum(arg[i - 1]) || arg[i - 1] == '_')) i--;
-      out.write(String.format("#define %sARGDECL ,%s\n", name, new String(arg, 0, i)).getBytes());
-      lineno.incrementAndGet();
-      out.write(String.format("#define %sXARGDECL %s;\n", name, new String(arg)).getBytes());
-      lineno.incrementAndGet();
-      out.write(String.format("#define %sANSIARGDECL ,%s\n", name, new String(arg)).getBytes());
-      lineno.incrementAndGet();
+//      out.write(String.format("#define %sARGDECL ,%s\n", name, new String(arg, 0, i)).getBytes());
+//      lineno.incrementAndGet();
+//      out.write(String.format("#define %sXARGDECL %s;\n", name, new String(arg)).getBytes());
+//      lineno.incrementAndGet();
+//      out.write(String.format("#define %sANSIARGDECL ,%s\n", name, new String(arg)).getBytes());
+//      lineno.incrementAndGet();
     } else {
-      out.write(String.format("#define %sARGDECL\n", name).getBytes());
-      lineno.incrementAndGet();
-      out.write(String.format("#define %sXARGDECL\n", name).getBytes());
-      lineno.incrementAndGet();
-      out.write(String.format("#define %sANSIARGDECL\n", name).getBytes());
-      lineno.incrementAndGet();
+//      out.write(String.format("#define %sARGDECL\n", name).getBytes());
+//      lineno.incrementAndGet();
+//      out.write(String.format("#define %sXARGDECL\n", name).getBytes());
+//      lineno.incrementAndGet();
+//      out.write(String.format("#define %sANSIARGDECL\n", name).getBytes());
+//      lineno.incrementAndGet();
     }
     if (mhflag != 0) {
       out.write("#endif\n".getBytes());
       lineno.incrementAndGet();
     }
-    out.write(String.format("#define YYNSTATE %d\n", lemp.nstate).getBytes());
-    lineno.incrementAndGet();
-    out.write(String.format("#define YYNRULE %d\n", lemp.nrule).getBytes());
-    lineno.incrementAndGet();
-    out.write(String.format("#define YYERRORSYMBOL %d\n", lemp.errsym.index).getBytes());
-    lineno.incrementAndGet();
-    out.write(String.format("#define YYERRSYMDT yy%d\n", lemp.errsym.dtnum).getBytes());
-    lineno.incrementAndGet();
+    Replacer.regist("YYNSTATE", lemp.nstate);
+    Replacer.regist("YYNRULE", lemp.nrule);
+    Replacer.regist("YYERRORSYMBOL", lemp.errsym.index);
+    Replacer.regist("YYERRSYMDT", String.format("yy%d", lemp.errsym.dtnum));
+//    out.write(String.format("#define YYNSTATE %d\n", lemp.nstate).getBytes());
+//    lineno.incrementAndGet();
+//    out.write(String.format("#define YYNRULE %d\n", lemp.nrule).getBytes());
+//    lineno.incrementAndGet();
+//    out.write(String.format("#define YYERRORSYMBOL %d\n", lemp.errsym.index).getBytes());
+//    lineno.incrementAndGet();
+//    out.write(String.format("#define YYERRSYMDT yy%d\n", lemp.errsym.dtnum).getBytes());
+//    lineno.incrementAndGet();
     tpltXfer(lemp.name, br, out, plineno);
 
     tablecnt = 0;
@@ -612,16 +630,17 @@ public class Report {
       lineno.incrementAndGet();
       for (j = 0; j < tablesize; j++) {
         if (table[j] == null) {
-          out.write("  {YYNOCODE,0,0}, /* Unused */\n".getBytes());
+          out.write("  new yyActionEntry(YYNOCODE,0,null), /* Unused */\n".getBytes());
+//          out.write("  {YYNOCODE,0,0}, /* Unused */\n".getBytes());
         } else {
-          out.write(String.format("  {%4d,%4d, ",
+          out.write(String.format("  new yyActionEntry(%4d,%4d, ",
                   table[j].sp.index,
                   computeAction(lemp, table[j])).getBytes());
           if (collide[j] >= 0) {
-            out.write(String.format("&yyActionTable[%4d] }, /* ",
+            out.write(String.format("yyActionTable[%4d] ), /* ",
                     collide[j] + tablecnt).getBytes());
           } else {
-            out.write("0                    }, /* ".getBytes());
+            out.write("null                ), /* ".getBytes());
           }
           printAction(table[j], out, 22);
           out.write(" */\n".getBytes());
@@ -737,6 +756,8 @@ public class Report {
     tpltPrint(out, lemp, lemp.extracode, lemp.extracodeln, plineno);
 
     in.close();
+    out0.write(out.toByteArray());
+    out0.close();
     out.close();
   }
 
