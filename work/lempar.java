@@ -127,6 +127,13 @@ public static class yyStateEntry {
   public yyActionEntry hashtbl; /* Start of the hash table in yyActionTable */
   public int mask;                      /* Mask used for hashing the look-ahead */
   public YYACTIONTYPE actionDefault;    /* Default action if look-ahead not found */
+  public yyStateEntry(yyActionEntry hashtbl,
+                      int mask,
+                      YYACTIONTYPE actionDefault) {
+    this.hashtbl = hashtbl;
+    this.mask = mask;
+    this.actionDefault = actionDefault;
+  }
 };
 public static yyStateEntry yyStateTable[] = {
 %%

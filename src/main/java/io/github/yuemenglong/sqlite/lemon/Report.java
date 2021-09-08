@@ -659,7 +659,7 @@ public class Report {
       stp = lemp.sorted[i];
       tablesize = 1;
       while (tablesize < stp.naction) tablesize += tablesize;
-      out.write(String.format("  { &yyActionTable[%d], %d, %d},\n",
+      out.write(String.format("  new yyStateEntry( yyActionTable[%d], %d, %d ),\n",
               stp.tabstart,
               tablesize - 1,
               stp.tabdfltact).getBytes());
