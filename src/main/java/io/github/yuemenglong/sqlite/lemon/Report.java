@@ -258,14 +258,14 @@ public class Report {
 
   public static void tpltPrint(OutputStream out, Lemon lemp, String str, int strln, Addr<Integer> lineno) throws IOException {
     if (str == null) return;
-    out.write(String.format("#line %d \"%s\"\n", strln, lemp.filename).getBytes());
+    out.write(String.format("// #line %d \"%s\"\n", strln, lemp.filename).getBytes());
     int p = 0;
     while (p < str.length()) {
       if (str.charAt(p) == '\n') lineno.set(lineno.get() + 1);
       out.write(str.charAt(p));
       p += 1;
     }
-    out.write(String.format("\n#line %d \"%s\"\n", lineno.get() + 2, lemp.outname).getBytes());
+    out.write(String.format("\n// #line %d \"%s\"\n", lineno.get() + 2, lemp.outname).getBytes());
   }
 
   public static void emitDestructorCode(OutputStream out, Symbol sp, Lemon lemp, Addr<Integer> lineno) throws IOException {
@@ -275,11 +275,11 @@ public class Report {
     if (sp.type == TERMINAL) {
       b = lemp.tokendest == null ? null : lemp.tokendest.getBytes();
       if (b == null) return;
-      out.write(String.format("#line %d \"%s\"\n{", lemp.tokendestln, lemp.filename).getBytes());
+      out.write(String.format("// #line %d \"%s\"\n{", lemp.tokendestln, lemp.filename).getBytes());
     } else {
       b = sp.destructor == null ? null : sp.destructor.getBytes();
       if (b == null) return;
-      out.write(String.format("#line %d \"%s\"\n{", sp.destructorln, lemp.filename).getBytes());
+      out.write(String.format("// #line %d \"%s\"\n{", sp.destructorln, lemp.filename).getBytes());
     }
     for (cp = 0; cp < b.length; cp++) {
       if (b[cp] == '$' && b[cp + 1] == '$') {
@@ -291,7 +291,7 @@ public class Report {
       out.write(b[cp]);
     }
     lineno.set(lineno.get() + 3 + linecnt);
-    out.write(String.format("}\n#line %d \"%s\"\n", lineno.get(), lemp.outname).getBytes());
+    out.write(String.format("}\n// #line %d \"%s\"\n", lineno.get(), lemp.outname).getBytes());
   }
 
   public static int hasDestructor(Symbol sp, Lemon lemp) {
@@ -313,7 +313,7 @@ public class Report {
     byte[] used = new byte[MAXRHS];
     for (i = 0; i < rp.nrhs; i++) used[i] = 0;
     if (rp.code != null) {
-      out.write(String.format("#line %d \"%s\"\n{", rp.line, lemp.filename).getBytes());
+      out.write(String.format("// #line %d \"%s\"\n{", rp.line, lemp.filename).getBytes());
       String s = rp.code;
       byte[] b = s.getBytes();
       for (cp = 0; cp < b.length; cp++) {
@@ -341,7 +341,7 @@ public class Report {
         out.write(b[cp]);
       }
       lineno.set(lineno.get() + 3 + linecnt);
-      out.write(String.format("}\n#line %d \"%s\"\n", lineno.get(), lemp.outname).getBytes());
+      out.write(String.format("}\n// #line %d \"%s\"\n", lineno.get(), lemp.outname).getBytes());
     }
     if (rp.lhsalias != null && lhsused == 0) {
       Error.msg(lemp.filename, rp.ruleline,

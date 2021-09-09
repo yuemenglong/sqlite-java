@@ -6,5 +6,6 @@ public class Test {
     lemon.Parse(parse, lemon.N, 0);
     lemon.Parse(parse, lemon.PLUS, 0);
     lemon.Parse(parse, lemon.N, 1);
+    lemon.Parse(parse, 0, 0);
   }
 }
