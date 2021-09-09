@@ -724,7 +724,8 @@ public class Report {
      ** sequentually beginning with 0.
      */
     for (rp = lemp.rule; rp != null; rp = rp.next) {
-      out.write(String.format("  { %d, %d },\n", rp.lhs.index, rp.nrhs).getBytes());
+//      out.write(String.format("  { %d, %d },\n", rp.lhs.index, rp.nrhs).getBytes());
+      out.write(String.format("  new yyRuleInfo( %d, %d ),\n", rp.lhs.index, rp.nrhs).getBytes());
       lineno.incrementAndGet();
     }
     tpltXfer(lemp.name, br, out, plineno);
@@ -735,7 +736,7 @@ public class Report {
       lineno.incrementAndGet();
       out.write(String.format("        YYTRACE(\"%s ::=", rp.lhs.name).getBytes());
       for (i = 0; i < rp.nrhs; i++) out.write(String.format(" %s", rp.rhs[i].name).getBytes());
-      out.write("\")\n".getBytes());
+      out.write("\");\n".getBytes());
       lineno.incrementAndGet();
       emitCode(out, rp, lemp, plineno);
       out.write("        break;\n".getBytes());

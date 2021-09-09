@@ -144,6 +144,19 @@ public static class yyStateEntry {
     this.mask = mask;
     this.actionDefault = actionDefault;
   }
+
+
+  public yyActionEntry offset(int offset){
+    int i= 0;
+    for (; i < yyActionTable.length && yyActionTable[i] != hashtbl; i++) ;
+    if (i >= yyActionTable.length) {
+      return null;
+    }
+    if (i + offset >= yyActionTable.length) {
+      return null;
+    }
+    return yyActionTable[i];
+  }
 };
 public static yyStateEntry[] yyStateTable = {
 %%
@@ -174,8 +187,12 @@ public static class yyStackEntry {
 public static class yyParser {
   public int idx;                            /* Index of top element in stack */
   public int errcnt;                         /* Shifts left before out of the error */
-  public yyStackEntry top;           /* Pointer to the top stack element */
+  public int top;           /* Pointer to the top stack element */
   public yyStackEntry []stack=new yyStackEntry[YYSTACKDEPTH];  /* The parser's stack */
+
+  public yyStackEntry top() {
+    return stack[top];
+  }
 };
 //typedef struct yyParser yyParser;
 
@@ -294,11 +311,11 @@ public static int yy_pop_parser_stack(yyParser pParser){
   if( yyTraceFILE!=null && pParser.idx>=0 ){
     trace(String.format("%sPopping %s\n",
       yyTracePrompt,
-      yyTokenName[pParser.top.major]).getBytes());
+      yyTokenName[pParser.top().major]).getBytes());
   }
 //#endif
-  yymajor = pParser.top.major;
-  yy_destructor( yymajor, &pParser.top.minor);
+  yymajor = pParser.top().major;
+  yy_destructor( yymajor, pParser.top().minor);
   pParser.idx--;
   pParser.top--;
   return yymajor;
@@ -342,12 +359,12 @@ static int yy_find_parser_action(
   yyActionEntry pAction; /* Action appropriate for the look-ahead */
 
   /* if( pParser.idx<0 ) return YY_NO_ACTION;  */
-  pState = &yyStateTable[pParser.top.stateno];
+  pState = yyStateTable[pParser.top().stateno];
   if( iLookAhead!=YYNOCODE ){
-    pAction = &pState.hashtbl[iLookAhead & pState.mask];
-    while( pAction ){
+    pAction = pState.offset(iLookAhead & pState.mask);
+    while( pAction!= null ){
       if( pAction.lookahead==iLookAhead ) return pAction.action;
-      pAction = pAction.next;
+      pAction = pAction.next();
     }
   }else if( pState.mask!=0 || pState.hashtbl.lookahead!=YYNOCODE ){
     return YY_NO_ACTION;
@@ -380,9 +397,9 @@ static void yy_shift(
 %%
      return;
   }
-  yypParser.top.stateno = yyNewState;
-  yypParser.top.major = yyMajor;
-  yypParser.top.minor = *yypMinor;
+  yypParser.top().stateno = yyNewState;
+  yypParser.top().major = yyMajor;
+  yypParser.top().minor = yypMinor;
 //#ifndef NDEBUG
   if( yyTraceFILE != null && yypParser.idx>0 ){
     int i;
@@ -398,14 +415,19 @@ static void yy_shift(
 /* The following table contains information about every rule that
 ** is used during the reduce.
 */
-static struct {
-  YYCODETYPE lhs;         /* Symbol on the left-hand side of the rule */
-  unsigned char nrhs;     /* Number of right-hand side symbols in the rule */
-} yyRuleInfo[] = {
+public static class yyRuleInfo {
+  public int lhs;         /* Symbol on the left-hand side of the rule */
+  public int nrhs;     /* Number of right-hand side symbols in the rule */
+  public yyRuleInfo(int lhs, int nrhs){
+    this.lhs = lhs;
+    this.nrhs = nrhs;
+  }
+}
+public static  yyRuleInfo[] yyRuleInfo= {
 %%
 };
 
-static void yy_accept();  /* Forward declaration */
+// static void yy_accept();  /* Forward declaration */
 
 /*
 ** Perform a reduce action and the shift that must immediately
@@ -418,10 +440,10 @@ static void yy_reduce(
 ){
   int yygoto;                     /* The next state */
   int yyact;                      /* The next action */
-  YYMINORTYPE yygotominor;        /* The LHS of the rule reduced */
-  struct yyStackEntry *yymsp;     /* The top of the parser's stack */
+  YYMINORTYPE yygotominor = new YYMINORTYPE();        /* The LHS of the rule reduced */
+  yyStackEntry yymsp;     /* The top of the parser's stack */
   int yysize;                     /* Amount to pop the stack */
-  yymsp = yypParser.top;
+  yymsp = yypParser.top();
   switch( yyruleno ){
   /* Beginning here are the reduction cases.  A typical example
   ** follows:
@@ -440,7 +462,7 @@ static void yy_reduce(
   yypParser.top -= yysize;
   yyact = yy_find_parser_action(yypParser,yygoto);
   if( yyact < YYNSTATE ){
-    yy_shift(yypParser,yyact,yygoto,&yygotominor);
+    yy_shift(yypParser,yyact,yygoto,yygotominor);
   }else if( yyact == YYNSTATE + YYNRULE + 1 ){
     yy_accept(yypParser ParseARGDECL);
   }
@@ -480,7 +502,7 @@ static void yy_syntax_error(
 /*
 ** The following is executed when the parser accepts
 */
-static void yy_accept(
+public static void yy_accept(
   yyParser yypParser           /* The parser */
   ParseANSIARGDECL              /* Extra arguments (if any) */
 ){
@@ -521,9 +543,9 @@ void Parse(
   ParseTOKENTYPE yyminor       /* The value for the token */
   ParseANSIARGDECL
 ){
-  YYMINORTYPE yyminorunion;
+  YYMINORTYPE yyminorunion = new YYMINORTYPE();
   int yyact;            /* The parser action. */
-  int yyendofinput;     /* True if we are at the end of input */
+  boolean yyendofinput;     /* True if we are at the end of input */
   int yyerrorhit = 0;   /* True if yymajor has invoked an error */
   yyParser yypParser;  /* The parser */
 
@@ -533,9 +555,10 @@ void Parse(
     if( yymajor==0 ) return;
     yypParser.idx = 0;
     yypParser.errcnt = -1;
-    yypParser.top = &yypParser.stack[0];
-    yypParser.top.stateno = 0;
-    yypParser.top.major = 0;
+//    yypParser.top = &yypParser.stack[0];
+    yypParser.top = 0;
+    yypParser.top().stateno = 0;
+    yypParser.top().major = 0;
   }
   yyminorunion.yy0 = yyminor;
   yyendofinput = (yymajor==0);
@@ -549,7 +572,7 @@ void Parse(
   do{
     yyact = yy_find_parser_action(yypParser,yymajor);
     if( yyact<YYNSTATE ){
-      yy_shift(yypParser,yyact,yymajor,&yyminorunion);
+      yy_shift(yypParser,yyact,yymajor,yyminorunion);
       yypParser.errcnt--;
       if( yyendofinput && yypParser.idx>=0 ){
         yymajor = 0;
@@ -587,31 +610,31 @@ void Parse(
       if( yypParser.errcnt<0 ){
         yy_syntax_error(yypParser,yymajor,yyminorunion ParseARGDECL);
       }
-      if( yypParser.top.major==YYERRORSYMBOL || yyerrorhit ){
+      if( yypParser.top().major==YYERRORSYMBOL || yyerrorhit != 0 ){
 //#ifndef NDEBUG
         if( yyTraceFILE != null ){
           trace(String.format("%sDiscard input token %s\n",
              yyTracePrompt,yyTokenName[yymajor]).getBytes());
         }
 //#endif
-        yy_destructor(yymajor,&yyminorunion);
+        yy_destructor(yymajor,yyminorunion);
         yymajor = YYNOCODE;
       }else{
          while(
           yypParser.idx >= 0 &&
-          yypParser.top.major != YYERRORSYMBOL &&
+          yypParser.top().major != YYERRORSYMBOL &&
           (yyact = yy_find_parser_action(yypParser,YYERRORSYMBOL)) >= YYNSTATE
         ){
           yy_pop_parser_stack(yypParser);
         }
         if( yypParser.idx < 0 || yymajor==0 ){
-          yy_destructor(yymajor,&yyminorunion);
+          yy_destructor(yymajor,yyminorunion);
           yy_parse_failed(yypParser ParseARGDECL);
           yymajor = YYNOCODE;
-        }else if( yypParser.top.major!=YYERRORSYMBOL ){
-          YYMINORTYPE u2;
+        }else if( yypParser.top().major!=YYERRORSYMBOL ){
+          YYMINORTYPE u2 = new YYMINORTYPE();
           u2.YYERRSYMDT = 0;
-          yy_shift(yypParser,yyact,YYERRORSYMBOL,&u2);
+          yy_shift(yypParser,yyact,YYERRORSYMBOL,u2);
         }
       }
       yypParser.errcnt = 3;
