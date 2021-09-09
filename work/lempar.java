@@ -190,6 +190,12 @@ public static class yyParser {
   public int top;           /* Pointer to the top stack element */
   public yyStackEntry []stack=new yyStackEntry[YYSTACKDEPTH];  /* The parser's stack */
 
+  public yyParser() {
+    for (int i = 0; i < stack.length; i++) {
+      stack[i] = new yyStackEntry();
+    }
+  }
+
   public yyStackEntry top() {
     return stack[top];
   }
@@ -231,6 +237,8 @@ public static void ParseTrace(OutputStream TraceFILE, String zTracePrompt){
 public static String[] yyTokenName = {
 %%
 };
+
+%%
 
 public static void trace(byte[] bs){
   try{
@@ -537,7 +545,7 @@ public static void yy_accept(
 ** None.
 */
 /* SQLITE MODIFICATION: Give the function file scope */
-void Parse(
+public static void Parse(
   Object yyp,                   /* The parser */
   int yymajor,                 /* The major token code number */
   ParseTOKENTYPE yyminor       /* The value for the token */

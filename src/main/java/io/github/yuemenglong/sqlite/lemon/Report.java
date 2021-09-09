@@ -683,6 +683,10 @@ public class Report {
       out.write("\n".getBytes());
       lineno.incrementAndGet();
     }
+    // Header
+    tpltXfer(lemp.name, br, out, plineno);
+    reportHeader(lemp, out);
+
     tpltXfer(lemp.name, br, out, plineno);
 
     /* Generate code which executes every time a symbol is popped from
@@ -767,6 +771,10 @@ public class Report {
   }
 
   public static void reportHeader(Lemon lemp) throws IOException {
+    reportHeader(lemp, fileOpenWrite(lemp, ".h"));
+  }
+
+  public static void reportHeader(Lemon lemp, OutputStream out) throws IOException {
     String prefix;
     String line;
     String pattern;
@@ -778,7 +786,8 @@ public class Report {
     if (in != null) {
       BufferedReader br = new BufferedReader(new InputStreamReader(in));
       for (i = 1; i < lemp.nterminal && (line = br.readLine()) != null; i++) {
-        pattern = String.format("#define %s%-30s %2d\n", prefix, lemp.symbols[i].name, i);
+//        pattern = String.format("#define %s%-30s %2d\n", prefix, lemp.symbols[i].name, i);
+        pattern = String.format("public static final int %s%-30s = %2d;\n", prefix, lemp.symbols[i].name, i);
         if (strcmp(line, pattern) != 0) break;
       }
       in.close();
@@ -787,9 +796,9 @@ public class Report {
         return;
       }
     }
-    FileOutputStream out = fileOpenWrite(lemp, ".h");
+//    FileOutputStream out = fileOpenWrite(lemp, ".h");
     for (i = 1; i < lemp.nterminal; i++) {
-      out.write(String.format("#define %s%-30s %2d\n", prefix, lemp.symbols[i].name, i).getBytes());
+      out.write(String.format("public static final int  %s%-30s = %2d;\n", prefix, lemp.symbols[i].name, i).getBytes());
     }
     out.close();
   }
