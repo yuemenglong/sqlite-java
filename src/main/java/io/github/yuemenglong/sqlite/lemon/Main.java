@@ -12,22 +12,10 @@ import static io.github.yuemenglong.sqlite.lemon.util.Util.isupper;
 import static java.lang.System.exit;
 
 public class Main {
-  public static void main(String[] args) throws IOException {
-    main0(new String[]{"D:/workspace/java/sqlite-java/work/lemon.y"});
-    FileInputStream is = new FileInputStream("D:/workspace/java/sqlite-java/work/lemon.java");
-    FileOutputStream os = new FileOutputStream("D:/workspace/java/sqlite-java/src/main/java/work/lemon.java");
-    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-    String line;
-    while ((line = br.readLine()) != null) {
-      os.write(line.getBytes());
-      os.write("\n".getBytes());
-    }
-    is.close();
-    os.close();
-  }
+
 
   /* The main program.  Parse the command line and do it... */
-  public static void main0(String[] argv) throws IOException {
+  public static void main(String[] argv) throws IOException {
     AtomicInteger version = new AtomicInteger();
     AtomicInteger rpflag = new AtomicInteger();
     AtomicInteger basisflag = new AtomicInteger();

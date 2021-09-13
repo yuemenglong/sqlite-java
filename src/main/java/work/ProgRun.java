@@ -1,6 +1,6 @@
 package work;
 
-public class Test {
+public class ProgRun {
   public static void main(String[] args) {
     lemon.yyParser parse = lemon.ParseAlloc();
     Parse p = new Parse();
