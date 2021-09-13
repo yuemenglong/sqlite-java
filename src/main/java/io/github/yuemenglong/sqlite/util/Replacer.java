@@ -17,15 +17,6 @@ public class Replacer {
 
   private static final ArrayList<Item> items = new ArrayList<>();
 
-  static {
-    //#define ParseARGDECL
-    //#define ParseXARGDECL
-    //#define ParseANSIARGDECL
-    regist("ParseARGDECL", "");
-    regist("ParseXARGDECL", "");
-    regist("ParseANSIARGDECL", "");
-  }
-
   public static void regist(String from, Object to) {
     items.add(new Item(from, to));
   }

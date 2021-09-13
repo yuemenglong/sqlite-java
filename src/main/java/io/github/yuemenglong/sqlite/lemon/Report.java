@@ -538,25 +538,34 @@ public class Report {
       lineno.incrementAndGet();
     }
     name = lemp.name != null ? lemp.name : "Parse";
-    if (lemp.arg != null && lemp.arg.charAt(0) != 0) {
-      byte[] arg = lemp.arg.getBytes();
-      i = (arg.length);
-      while (i >= 1 && isspace(arg[i - 1])) i--;
-      while (i >= 1 && (isalnum(arg[i - 1]) || arg[i - 1] == '_')) i--;
+    String arg = lemp.arg;
+    if (arg == null) {
+      arg = "Object ignore";
+    } else {
+      arg = arg.substring(1);
+    }
+    Replacer.regist("ParseARGDECL", arg.split(" ")[1]);
+    Replacer.regist("ParseXARGDECL", arg);
+    Replacer.regist("ParseANSIARGDECL", arg);
+//    if (lemp.arg != null && lemp.arg.charAt(0) != 0) {
+//      byte[] arg = lemp.arg.getBytes();
+//      i = (arg.length);
+//      while (i >= 1 && isspace(arg[i - 1])) i--;
+//      while (i >= 1 && (isalnum(arg[i - 1]) || arg[i - 1] == '_')) i--;
 //      out.write(String.format("#define %sARGDECL ,%s\n", name, new String(arg, 0, i)).getBytes());
 //      lineno.incrementAndGet();
 //      out.write(String.format("#define %sXARGDECL %s;\n", name, new String(arg)).getBytes());
 //      lineno.incrementAndGet();
 //      out.write(String.format("#define %sANSIARGDECL ,%s\n", name, new String(arg)).getBytes());
 //      lineno.incrementAndGet();
-    } else {
+//    } else {
 //      out.write(String.format("#define %sARGDECL\n", name).getBytes());
 //      lineno.incrementAndGet();
 //      out.write(String.format("#define %sXARGDECL\n", name).getBytes());
 //      lineno.incrementAndGet();
 //      out.write(String.format("#define %sANSIARGDECL\n", name).getBytes());
 //      lineno.incrementAndGet();
-    }
+//    }
     if (mhflag != 0) {
       out.write("#endif\n".getBytes());
       lineno.incrementAndGet();

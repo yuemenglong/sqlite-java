@@ -1,3 +1,6 @@
+%token_prefix TK_
+%extra_argument {Parse pParse}
+
 s ::= e.{System.out.println("s ::= e");}
 e ::= e PLUS t.{System.out.println("e ::= e PLUS t");}
 e ::= t.{System.out.println("e ::= t");}

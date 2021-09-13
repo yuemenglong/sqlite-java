@@ -445,7 +445,7 @@ public static  yyRuleInfo[] yyRuleInfo= {
 static void yy_reduce(
   yyParser yypParser,         /* The parser */
   int yyruleno                 /* Number of the rule by which to reduce */
-  ParseANSIARGDECL
+  ,ParseANSIARGDECL
 ){
   int yygoto;                     /* The next state */
   int yyact;                      /* The next action */
@@ -473,7 +473,7 @@ static void yy_reduce(
   if( yyact < YYNSTATE ){
     yy_shift(yypParser,yyact,yygoto,yygotominor);
   }else if( yyact == YYNSTATE + YYNRULE + 1 ){
-    yy_accept(yypParser ParseARGDECL);
+    yy_accept(yypParser ,ParseARGDECL);
   }
 }
 
@@ -482,7 +482,7 @@ static void yy_reduce(
 */
 static void yy_parse_failed(
   yyParser yypParser           /* The parser */
-  ParseANSIARGDECL              /* Extra arguments (if any) */
+  ,ParseANSIARGDECL              /* Extra arguments (if any) */
 ){
 //#ifndef NDEBUG
   if( yyTraceFILE != null){
@@ -502,7 +502,7 @@ static void yy_syntax_error(
   yyParser yypParser,           /* The parser */
   int yymajor,                   /* The major type of the error token */
   YYMINORTYPE yyminor            /* The minor type of the error token */
-  ParseANSIARGDECL               /* Extra arguments (if any) */
+  ,ParseANSIARGDECL               /* Extra arguments (if any) */
 ){
 //#define TOKEN (yyminor.yy0)
 %%
@@ -513,7 +513,7 @@ static void yy_syntax_error(
 */
 public static void yy_accept(
   yyParser yypParser           /* The parser */
-  ParseANSIARGDECL              /* Extra arguments (if any) */
+  ,ParseANSIARGDECL              /* Extra arguments (if any) */
 ){
 //#ifndef NDEBUG
   if( yyTraceFILE != null){
@@ -550,7 +550,7 @@ public static void Parse(
   Object yyp,                   /* The parser */
   int yymajor,                 /* The major token code number */
   ParseTOKENTYPE yyminor       /* The value for the token */
-  ParseANSIARGDECL
+  ,ParseANSIARGDECL
 ){
   YYMINORTYPE yyminorunion = new YYMINORTYPE();
   int yyact;            /* The parser action. */
@@ -589,7 +589,7 @@ public static void Parse(
         yymajor = YYNOCODE;
       }
     }else if( yyact < YYNSTATE + YYNRULE ){
-      yy_reduce(yypParser,yyact-YYNSTATE ParseARGDECL);
+      yy_reduce(yypParser,yyact-YYNSTATE ,ParseARGDECL);
     }else if( yyact == YY_ERROR_ACTION ){
 //#ifndef NDEBUG
       if( yyTraceFILE != null){
@@ -617,7 +617,7 @@ public static void Parse(
       **
       */
       if( yypParser.errcnt<0 ){
-        yy_syntax_error(yypParser,yymajor,yyminorunion ParseARGDECL);
+        yy_syntax_error(yypParser,yymajor,yyminorunion ,ParseARGDECL);
       }
       if( yypParser.top().major==YYERRORSYMBOL || yyerrorhit != 0 ){
 //#ifndef NDEBUG
@@ -638,7 +638,7 @@ public static void Parse(
         }
         if( yypParser.idx < 0 || yymajor==0 ){
           yy_destructor(yymajor,yyminorunion);
-          yy_parse_failed(yypParser ParseARGDECL);
+          yy_parse_failed(yypParser ,ParseARGDECL);
           yymajor = YYNOCODE;
         }else if( yypParser.top().major!=YYERRORSYMBOL ){
           YYMINORTYPE u2 = new YYMINORTYPE();
@@ -669,7 +669,7 @@ public static void Parse(
 //      yymajor = YYNOCODE;
 //#endif
     }else{
-      yy_accept(yypParser ParseARGDECL);
+      yy_accept(yypParser ,ParseARGDECL);
       yymajor = YYNOCODE;
     }
   }while( yymajor!=YYNOCODE && yypParser.idx>=0 );
