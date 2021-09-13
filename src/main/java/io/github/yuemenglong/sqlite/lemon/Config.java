@@ -1,8 +1,7 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Table;
+import io.github.yuemenglong.sqlite.lemon.util.Table;
 
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Config {

@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.common.IList;
+import io.github.yuemenglong.sqlite.lemon.common.IList;
 
 import java.util.function.BiFunction;
 

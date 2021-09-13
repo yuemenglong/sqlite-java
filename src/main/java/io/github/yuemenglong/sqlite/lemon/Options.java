@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Addr;
+import io.github.yuemenglong.sqlite.lemon.util.Addr;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_FFLAG;
 import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_FLAG;
-import static io.github.yuemenglong.sqlite.util.Util.*;
+import static io.github.yuemenglong.sqlite.lemon.util.Util.*;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class Options {

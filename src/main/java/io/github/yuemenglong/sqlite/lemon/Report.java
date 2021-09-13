@@ -1,8 +1,8 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Addr;
-import io.github.yuemenglong.sqlite.util.Assert;
-import io.github.yuemenglong.sqlite.util.Replacer;
+import io.github.yuemenglong.sqlite.lemon.util.Addr;
+import io.github.yuemenglong.sqlite.lemon.util.Assert;
+import io.github.yuemenglong.sqlite.lemon.util.Replacer;
 
 import java.io.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,7 +12,7 @@ import static io.github.yuemenglong.sqlite.lemon.Action.Type.REDUCE;
 import static io.github.yuemenglong.sqlite.lemon.Common.MAXRHS;
 import static io.github.yuemenglong.sqlite.lemon.Symbol.SymbolType.NONTERMINAL;
 import static io.github.yuemenglong.sqlite.lemon.Symbol.SymbolType.TERMINAL;
-import static io.github.yuemenglong.sqlite.util.Util.*;
+import static io.github.yuemenglong.sqlite.lemon.util.Util.*;
 
 @SuppressWarnings("unused")
 public class Report {

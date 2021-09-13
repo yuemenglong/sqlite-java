@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Addr;
+import io.github.yuemenglong.sqlite.lemon.util.Addr;
 
 import java.io.*;
 import java.util.Arrays;
@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_FLAG;
-import static io.github.yuemenglong.sqlite.util.Util.isupper;
+import static io.github.yuemenglong.sqlite.lemon.util.Util.isupper;
 import static java.lang.System.exit;
 
 public class Main {

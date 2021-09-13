@@ -1,10 +1,8 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Table;
+import io.github.yuemenglong.sqlite.lemon.util.Table;
 
-import java.util.Arrays;
-
-import static io.github.yuemenglong.sqlite.util.Util.isupper;
+import static io.github.yuemenglong.sqlite.lemon.util.Util.isupper;
 
 public class Symbol {
   public enum SymbolType {

@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Table;
+import io.github.yuemenglong.sqlite.lemon.util.Table;
 
 public class State {
   public Config bp;       /* The basis configurations for this state */

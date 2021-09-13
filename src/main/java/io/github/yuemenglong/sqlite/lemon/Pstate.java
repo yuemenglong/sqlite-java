@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.util.Addr;
+import io.github.yuemenglong.sqlite.lemon.util.Addr;
 
 import static io.github.yuemenglong.sqlite.lemon.Common.MAXRHS;
 
