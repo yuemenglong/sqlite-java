@@ -196,6 +196,10 @@ public static class yyParser {
   public yyStackEntry top() {
     return stack[top];
   }
+
+  public yyStackEntry offset(int offset){
+    return stack[top+offset];
+  }
 };
 //typedef struct yyParser yyParser;
 

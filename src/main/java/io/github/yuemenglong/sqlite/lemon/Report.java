@@ -321,14 +321,15 @@ public class Report {
           int saved;
           for (xp = cp + 1; isalnum(b[xp]); xp++) ;
           saved = xp;
-          if (rp.lhsalias != null && strcmp(s.substring(cp), rp.lhsalias) == 0) {
+          if (rp.lhsalias != null && strcmp(s.substring(cp, cp + rp.lhsalias.length()), rp.lhsalias) == 0) {
             out.write(String.format("yygotominor.yy%d", rp.lhs.dtnum).getBytes());
             cp = xp;
             lhsused = 1;
           } else {
             for (i = 0; i < rp.nrhs; i++) {
-              if (rp.rhsalias[i] != null && strcmp(s.substring(cp), rp.rhsalias[i]) == 0) {
-                out.write(String.format("yymsp[%d].minor.yy%d", i - rp.nrhs + 1, rp.rhs[i].dtnum).getBytes());
+              if (rp.rhsalias[i] != null && strcmp(s.substring(cp, cp + rp.rhsalias[i].length()), rp.rhsalias[i]) == 0) {
+//                out.write(String.format("yymsp[%d].minor.yy%d", i - rp.nrhs + 1, rp.rhs[i].dtnum).getBytes());
+                out.write(String.format("yypParser.offset(%d).minor.yy%d", i - rp.nrhs + 1, rp.rhs[i].dtnum).getBytes());
                 cp = xp;
                 used[i] = 1;
                 break;
