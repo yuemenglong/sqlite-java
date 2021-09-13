@@ -2,7 +2,7 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.util.Addr;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +14,16 @@ import static java.lang.System.exit;
 public class Main {
   public static void main(String[] args) throws IOException {
     main0(new String[]{"D:/workspace/java/sqlite-java/work/lemon.y"});
+    FileInputStream is = new FileInputStream("D:/workspace/java/sqlite-java/work/lemon.java");
+    FileOutputStream os = new FileOutputStream("D:/workspace/java/sqlite-java/src/main/java/work/lemon.java");
+    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+    String line;
+    while ((line = br.readLine()) != null) {
+      os.write(line.getBytes());
+      os.write("\n".getBytes());
+    }
+    is.close();
+    os.close();
   }
 
   /* The main program.  Parse the command line and do it... */
@@ -148,6 +158,6 @@ public class Main {
     if (lem.nconflict != 0) {
       System.err.printf("%d parsing conflicts.\n", lem.nconflict);
     }
-    exit(lem.errorcnt + lem.nconflict);
+//    exit(lem.errorcnt + lem.nconflict);
   }
 }

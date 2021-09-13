@@ -22,6 +22,7 @@
 **
 ** Modified 1997 to make it suitable for use with makeheaders.
 */
+package work;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -134,10 +135,11 @@ public static yyActionEntry[] yyActionTable = {
 **     the given look-ahead is found in the action hash table.
 */
 public static class yyStateEntry {
-  public yyActionEntry hashtbl; /* Start of the hash table in yyActionTable */
+//  public yyActionEntry hashtbl; /* Start of the hash table in yyActionTable */
+  public int hashtbl; /* Start of the hash table in yyActionTable */
   public int mask;                      /* Mask used for hashing the look-ahead */
   public YYACTIONTYPE actionDefault;    /* Default action if look-ahead not found */
-  public yyStateEntry(yyActionEntry hashtbl,
+  public yyStateEntry(int hashtbl,
                       int mask,
                       YYACTIONTYPE actionDefault) {
     this.hashtbl = hashtbl;
@@ -145,17 +147,12 @@ public static class yyStateEntry {
     this.actionDefault = actionDefault;
   }
 
+  public yyActionEntry hashtbl(){
+    return yyActionTable[hashtbl];
+  }
 
   public yyActionEntry offset(int offset){
-    int i= 0;
-    for (; i < yyActionTable.length && yyActionTable[i] != hashtbl; i++) ;
-    if (i >= yyActionTable.length) {
-      return null;
-    }
-    if (i + offset >= yyActionTable.length) {
-      return null;
-    }
-    return yyActionTable[i];
+    return yyActionTable[hashtbl + offset];
   }
 };
 public static yyStateEntry[] yyStateTable = {
@@ -272,7 +269,9 @@ public static void YYTRACE(Object X){
 */
 /* SQLITE MODIFICATION: Give the function file scope */
 public static yyParser ParseAlloc(){
-  return new yyParser();
+  yyParser ret = new yyParser();
+  ret.idx = -1;
+  return ret;
 //  yyParser *pParser;
 //  pParser = (yyParser*)(*mallocProc)( sizeof(yyParser), __FILE__, __LINE__ );
 //  if( pParser ){
@@ -367,14 +366,16 @@ static int yy_find_parser_action(
   yyActionEntry pAction; /* Action appropriate for the look-ahead */
 
   /* if( pParser.idx<0 ) return YY_NO_ACTION;  */
-  pState = yyStateTable[pParser.top().stateno];
+  int stateNo = pParser.top().stateno;
+  pState = yyStateTable[stateNo];
   if( iLookAhead!=YYNOCODE ){
+    int offset = pState.hashtbl + (iLookAhead & pState.mask);
     pAction = pState.offset(iLookAhead & pState.mask);
     while( pAction!= null ){
       if( pAction.lookahead==iLookAhead ) return pAction.action;
       pAction = pAction.next();
     }
-  }else if( pState.mask!=0 || pState.hashtbl.lookahead!=YYNOCODE ){
+  }else if( pState.mask!=0 || pState.hashtbl().lookahead!=YYNOCODE ){
     return YY_NO_ACTION;
   }
   return pState.actionDefault;
