@@ -300,9 +300,9 @@ public class vdbe {
     Ptr<Integer> aLabel; /* Space to hold the labels */
     int tos;            /* Index of top of stack */
     int nStackAlloc;    /* Size of the stack */
-    Stack aStack;      /* The operand stack, except string values */
-    CharPtr zStack;      /* Text or binary values of the stack */
-    CharPtr azColName;   /* Becomes the 4th parameter to callbacks */
+    Stack[] aStack;      /* The operand stack, except string values */
+    CharPtr[] zStack;      /* Text or binary values of the stack */
+    CharPtr[] azColName;   /* Becomes the 4th parameter to callbacks */
     int nCursor;        /* Number of slots in aCsr[] */
     Cursor aCsr;       /* On element of this array for each open cursor */
     int nList;          /* Number of slots in apList[] */
@@ -607,6 +607,42 @@ public class vdbe {
     for (pElem = p.apHash[h]; pElem != null; pElem = pElem.pHash) {
       if ((pElem.zKey.strcmp(zKey)) == 0) return 1;
     }
+    return 0;
+  }
+
+  /*
+   ** Convert the given stack entity into a string if it isn't one
+   ** already.  Return non-zero if we run out of memory.
+   **
+   ** NULLs are converted into an empty string.
+   */
+//#define Stringify(P,I) \
+//          ((P->aStack[I].flags & STK_Str)==0 ? hardStringify(P,I) : 0)
+  public static int Stringify(Vdbe p, int i) {
+    if ((p.aStack[i].flags & STK_Str) == 0) {
+      return hardStringify(p, i);
+    } else {
+      return 0;
+    }
+  }
+
+  public static int hardStringify(Vdbe p, int i) {
+    CharPtr zBuf = new CharPtr(30);
+    int fg = p.aStack[i].flags;
+    if ((fg & STK_Real) != 0) {
+      zBuf.sprintf("%g", p.aStack[i].r);
+    } else if ((fg & STK_Int) != 0) {
+      zBuf.sprintf("%d", p.aStack[i].i);
+    } else {
+      p.zStack[i] = new CharPtr("");
+      p.aStack[i].n = 1;
+      p.aStack[i].flags |= STK_Str;
+      return 0;
+    }
+    p.zStack[i] = sqliteStrDup(zBuf);
+    if (p.zStack[i] == null) return 1;
+    p.aStack[i].n = p.zStack[i].strlen() + 1;
+    p.aStack[i].flags |= STK_Str | STK_Dyn;
     return 0;
   }
 

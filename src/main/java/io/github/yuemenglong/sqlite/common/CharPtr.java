@@ -82,7 +82,7 @@ public class CharPtr {
     cs[pos + n] = (char) c;
   }
 
-  public int strcmp(CharPtr x){
+  public int strcmp(CharPtr x) {
     return toZeroString().compareTo(x.toZeroString());
   }
 
@@ -113,6 +113,11 @@ public class CharPtr {
     for (int i = 0; i < p.strlen() && i < n; i++) {
       cs[pos + i] = p.cs[i];
     }
+  }
+
+  public void sprintf(String fmt, Object args) {
+    String s = String.format(fmt, args);
+    strcpy(new CharPtr(s));
   }
 
   public String toZeroString() {
