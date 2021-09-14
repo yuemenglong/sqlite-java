@@ -2,7 +2,7 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.lemon.util.Table;
 
-import static io.github.yuemenglong.sqlite.lemon.util.Util.isupper;
+import static io.github.yuemenglong.sqlite.common.Util.isupper;
 
 public class Symbol {
   public enum SymbolType {

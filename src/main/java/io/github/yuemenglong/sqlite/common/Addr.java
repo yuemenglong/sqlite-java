@@ -1,4 +1,4 @@
-package io.github.yuemenglong.sqlite.lemon.util;
+package io.github.yuemenglong.sqlite.common;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;

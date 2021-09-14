@@ -1,7 +1,7 @@
 package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.lemon.common.IList;
-import io.github.yuemenglong.sqlite.lemon.util.Addr;
+import io.github.yuemenglong.sqlite.common.Addr;
 
 public class Plink {
   public Config cfp;      /* The configuration to which linked */

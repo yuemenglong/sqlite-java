@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.core;
 
-import io.github.yuemenglong.sqlite.lemon.util.Addr;
+import io.github.yuemenglong.sqlite.common.Addr;
 
 public class sqliteint {
   public static final int N_HASH = 51;

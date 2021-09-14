@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.lemon.util.Addr;
+import io.github.yuemenglong.sqlite.common.Addr;
 import io.github.yuemenglong.sqlite.lemon.util.Assert;
 
 public class Build {

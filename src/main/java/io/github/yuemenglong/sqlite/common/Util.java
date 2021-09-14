@@ -1,4 +1,4 @@
-package io.github.yuemenglong.sqlite.lemon.util;
+package io.github.yuemenglong.sqlite.common;
 
 import java.io.File;
 
@@ -33,6 +33,10 @@ public class Util {
       default:
         return false;
     }
+  }
+
+  public static boolean isdigit(int c) {
+    return '0' <= c && c <= '9';
   }
 
   public static int access(String path, int mode) {

@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.lemon;
 
-import io.github.yuemenglong.sqlite.lemon.util.Addr;
+import io.github.yuemenglong.sqlite.common.Addr;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,7 +8,7 @@ import java.io.IOException;
 
 import static io.github.yuemenglong.sqlite.lemon.Common.MAXRHS;
 import static io.github.yuemenglong.sqlite.lemon.Pstate.State.*;
-import static io.github.yuemenglong.sqlite.lemon.util.Util.*;
+import static io.github.yuemenglong.sqlite.common.Util.*;
 
 public class Parse {
 
