@@ -8,6 +8,34 @@ import java.util.concurrent.atomic.AtomicReference;
 import static io.github.yuemenglong.sqlite.common.Util.isdigit;
 
 public class util {
+
+  CharPtr sqliteMalloc(int n) {
+    return new CharPtr(n);
+  }
+
+  /*
+   ** Free memory previously obtained from sqliteMalloc()
+   */
+  void sqliteFree(CharPtr p) {
+  }
+
+  /*
+   ** Resize a prior allocation.  If p==0, then this routine
+   ** works just like sqliteMalloc().  If n==0, then this routine
+   ** works just like sqliteFree().
+   */
+  CharPtr sqliteRealloc(CharPtr p, int n) {
+    if (p == null) {
+      return new CharPtr(n);
+    }
+    if (n == 0) {
+      return null;
+    }
+    CharPtr ret = new CharPtr(n);
+    ret.memcpy(p, n);
+    return ret;
+  }
+
   public static CharPtr sqliteStrDup(CharPtr z) {
     z = z.dup();
     CharPtr zNew = new CharPtr(z.strlen() + 1);

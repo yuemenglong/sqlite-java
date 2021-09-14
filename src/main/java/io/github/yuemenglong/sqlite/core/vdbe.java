@@ -3,8 +3,13 @@ package io.github.yuemenglong.sqlite.core;
 import io.github.yuemenglong.sqlite.common.Addr;
 import io.github.yuemenglong.sqlite.common.CharPtr;
 import io.github.yuemenglong.sqlite.common.FILE;
+import io.github.yuemenglong.sqlite.common.Ptr;
 import io.github.yuemenglong.sqlite.core.sqliteint.*;
+
+import static io.github.yuemenglong.sqlite.core.util.*;
+
 import io.github.yuemenglong.sqlite.core.dbbe.*;
+
 
 @SuppressWarnings("unused")
 public class vdbe {
@@ -26,8 +31,6 @@ public class vdbe {
     int p2;             /* Second parameter (often the jump destination) */
     CharPtr p3;           /* Third parameter */
   }
-
-  ;
 
   /*
    ** The following macro converts a relative address in the p2 field
@@ -178,8 +181,6 @@ public class vdbe {
     int keyAsData;        /* The OP_Field command works on key instead of data */
   }
 
-  ;
-
   //
   ///*
   //** A sorter builds a list of elements to be sorted.  Each element of
@@ -194,7 +195,6 @@ public class vdbe {
     Sorter pNext;      /* Next in the list */
   }
 
-  ;
   //
   ///*
   //** Number of buckets used for merge-sort.
@@ -216,8 +216,6 @@ public class vdbe {
     double r;      /* Real value */
   }
 
-  ;
-
   //typedef struct Stack Stack;
   //
   ///*
@@ -229,7 +227,6 @@ public class vdbe {
     CharPtr z;       /* String value for this memory cell */
   }
 
-  ;
   //typedef struct Mem Mem;
   //
   ///*
@@ -296,10 +293,10 @@ public class vdbe {
     FILE trace;        /* Write an execution trace here, if not NULL */
     int nOp;            /* Number of instructions in the program */
     int nOpAlloc;       /* Number of slots allocated for aOp[] */
-    Op aOp;            /* Space to hold the virtual machine's program */
+    Op[] aOp;            /* Space to hold the virtual machine's program */
     int nLabel;         /* Number of labels used */
     int nLabelAlloc;    /* Number of slots allocated in aLabel[] */
-    Addr<Integer> aLabel; /* Space to hold the labels */
+    Ptr<Integer> aLabel; /* Space to hold the labels */
     int tos;            /* Index of top of stack */
     int nStackAlloc;    /* Size of the stack */
     Stack aStack;      /* The operand stack, except string values */
@@ -324,5 +321,71 @@ public class vdbe {
     int nFetch;         /* Number of OP_Fetch instructions executed */
   }
 
-  ;
+  /*
+   ** Create a new virtual database engine.
+   */
+  public Vdbe sqliteVdbeCreate(Dbbe pBe) {
+    Vdbe p = new Vdbe();
+    p.pBe = pBe;
+    return p;
+  }
+
+  /*
+   ** Turn tracing on or off
+   */
+  void sqliteVdbeTrace(Vdbe p, FILE trace) {
+    p.trace = trace;
+  }
+
+  /*
+   ** Add a new instruction to the list of instructions current in the
+   ** VDBE.  Return the address of the new instruction.
+   **
+   ** Parameters:
+   **
+   **    p               Pointer to the VDBE
+   **
+   **    op              The opcode for this instruction
+   **
+   **    p1, p2, p3      Three operands.
+   **
+   **    lbl             A symbolic label for this instruction.
+   **
+   ** Symbolic labels are negative numbers that stand for the address
+   ** of instructions that have yet to be coded.  When the instruction
+   ** is coded, its real address is substituted in the p2 field of
+   ** prior and subsequent instructions that have the lbl value in
+   ** their p2 fields.
+   */
+  int sqliteVdbeAddOp(Vdbe p, int op, int p1, int p2, CharPtr p3, int lbl) {
+    int i, j;
+
+    i = p.nOp;
+    p.nOp++;
+    if (i >= p.nOpAlloc) {
+      int oldSize = p.nOpAlloc;
+      p.nOpAlloc = p.nOpAlloc * 2 + 10;
+      p.aOp = new Op[p.nOpAlloc];
+//      p.aOp = sqliteRealloc(p.aOp, p.nOpAlloc*sizeof(Op));
+//      memset(&p.aOp[oldSize], 0, (p.nOpAlloc-oldSize)*sizeof(Op));
+    }
+    p.aOp[i].opcode = op;
+    p.aOp[i].p1 = p1;
+    if (p2 < 0 && (-1 - p2) < p.nLabel && p.aLabel.get(-1 - p2) >= 0) {
+      p2 = p.aLabel.get(-1 - p2);
+    }
+    p.aOp[i].p2 = p2;
+    if (p3 != null && p3.get(0) != 0) {
+      p.aOp[i].p3 = sqliteStrDup(p3);
+    } else {
+      p.aOp[i].p3 = null;
+    }
+    if (lbl < 0 && (-lbl) <= p.nLabel) {
+      p.aLabel.set(-1 - lbl, i);
+      for (j = 0; j < i; j++) {
+        if (p.aOp[j].p2 == lbl) p.aOp[j].p2 = i;
+      }
+    }
+    return i;
+  }
 }
