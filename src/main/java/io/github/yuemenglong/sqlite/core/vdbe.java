@@ -297,7 +297,7 @@ public class vdbe {
     Op[] aOp;            /* Space to hold the virtual machine's program */
     int nLabel;         /* Number of labels used */
     int nLabelAlloc;    /* Number of slots allocated in aLabel[] */
-    Ptr<Integer> aLabel; /* Space to hold the labels */
+    Integer[] aLabel; /* Space to hold the labels */
     int tos;            /* Index of top of stack */
     int nStackAlloc;    /* Size of the stack */
     Stack[] aStack;      /* The operand stack, except string values */
@@ -366,14 +366,14 @@ public class vdbe {
     if (i >= p.nOpAlloc) {
       int oldSize = p.nOpAlloc;
       p.nOpAlloc = p.nOpAlloc * 2 + 10;
-      p.aOp = new Op[p.nOpAlloc];
-//      p.aOp = sqliteRealloc(p.aOp, p.nOpAlloc*sizeof(Op));
+//      p.aOp = new Op[p.nOpAlloc];
+      p.aOp = sqliteRealloc(p.aOp, p.nOpAlloc);
 //      memset(&p.aOp[oldSize], 0, (p.nOpAlloc-oldSize)*sizeof(Op));
     }
     p.aOp[i].opcode = op;
     p.aOp[i].p1 = p1;
-    if (p2 < 0 && (-1 - p2) < p.nLabel && p.aLabel.get(-1 - p2) >= 0) {
-      p2 = p.aLabel.get(-1 - p2);
+    if (p2 < 0 && (-1 - p2) < p.nLabel && p.aLabel[-1 - p2] >= 0) {
+      p2 = p.aLabel[-1 - p2];
     }
     p.aOp[i].p2 = p2;
     if (p3 != null && p3.get(0) != 0) {
@@ -382,12 +382,57 @@ public class vdbe {
       p.aOp[i].p3 = null;
     }
     if (lbl < 0 && (-lbl) <= p.nLabel) {
-      p.aLabel.set(-1 - lbl, i);
+      p.aLabel[-1 - lbl] = i;
       for (j = 0; j < i; j++) {
         if (p.aOp[j].p2 == lbl) p.aOp[j].p2 = i;
       }
     }
     return i;
+  }
+
+  /*
+   ** Resolve label "x" to be the address of the next instruction to
+   ** be inserted.
+   */
+  void sqliteVdbeResolveLabel(Vdbe p, int x) {
+    int j;
+    if (x < 0 && (-x) <= p.nLabel) {
+      p.aLabel[-1 - x] = p.nOp;
+      for (j = 0; j < p.nOp; j++) {
+        if (p.aOp[j].p2 == x) p.aOp[j].p2 = p.nOp;
+      }
+    }
+  }
+
+  /*
+   ** Return the address of the next instruction to be inserted.
+   */
+  int sqliteVdbeCurrentAddr(Vdbe p) {
+    return p.nOp;
+  }
+
+  /*
+   ** Add a whole list of operations to the operation stack.  Return the
+   ** address of the first operation added.
+   */
+  int sqliteVdbeAddOpList(Vdbe p, int nOp, VdbeOp[] aOp) {
+    int addr;
+    if (p.nOp + nOp >= p.nOpAlloc) {
+      int oldSize = p.nOpAlloc;
+      p.nOpAlloc = p.nOpAlloc * 2 + nOp + 10;
+      p.aOp = sqliteRealloc(p.aOp, p.nOpAlloc);
+//      memset(&p.aOp[oldSize], 0, (p.nOpAlloc-oldSize)*sizeof(Op));
+    }
+    addr = p.nOp;
+    if (nOp > 0) {
+      int i;
+      for (i = 0; i < nOp; i++) {
+        int p2 = aOp[i].p2;
+        if (p2 < 0) p2 = addr + ADDR(p2);
+        sqliteVdbeAddOp(p, aOp[i].opcode, aOp[i].p1, p2, aOp[i].p3, 0);
+      }
+    }
+    return addr;
   }
 
   /*
@@ -464,9 +509,9 @@ public class vdbe {
     i = p.nLabel++;
     if (i >= p.nLabelAlloc) {
       p.nLabelAlloc = p.nLabelAlloc * 2 + 10;
-      p.aLabel = new Ptr<>(p.nLabelAlloc);//sqliteRealloc( p.aLabel, p.nLabelAlloc*sizeof(int));
+      p.aLabel = sqliteRealloc(p.aLabel, p.nLabelAlloc);
     }
-    p.aLabel.set(i, -1);
+    p.aLabel[i] = -1;
     return -1 - i;
   }
 
@@ -617,7 +662,7 @@ public class vdbe {
    ** NULLs are converted into an empty string.
    */
 //#define Stringify(P,I) \
-//          ((P->aStack[I].flags & STK_Str)==0 ? hardStringify(P,I) : 0)
+//          ((P.aStack[I].flags & STK_Str)==0 ? hardStringify(P,I) : 0)
   public static int Stringify(Vdbe p, int i) {
     if ((p.aStack[i].flags & STK_Str) == 0) {
       return hardStringify(p, i);
@@ -643,6 +688,117 @@ public class vdbe {
     if (p.zStack[i] == null) return 1;
     p.aStack[i].n = p.zStack[i].strlen() + 1;
     p.aStack[i].flags |= STK_Str | STK_Dyn;
+    return 0;
+  }
+
+  /*
+   ** Release the memory associated with the given stack level
+   */
+  public static void Release(Vdbe P, int I) {
+    if (((P).aStack[I].flags & STK_Dyn) != 0) {
+      hardRelease(P, I);
+    }
+  }
+
+  public static void hardRelease(Vdbe p, int i) {
+//    sqliteFree(p.zStack[i]);
+    p.zStack[i] = null;
+    p.aStack[i].flags &= ~(STK_Str | STK_Dyn);
+  }
+
+
+  /*
+   ** Convert the given stack entity into a integer if it isn't one
+   ** already.
+   **
+   ** Any prior string or real representation is invalidated.
+   ** NULLs are converted into 0.
+   */
+  public static void Integerify(Vdbe P, int I) {
+    if (((P).aStack[(I)].flags & STK_Int) == 0) {
+      hardIntegerify(P, I);
+    }
+  }
+
+  static void hardIntegerify(Vdbe p, int i) {
+    if ((p.aStack[i].flags & STK_Real) != 0) {
+      p.aStack[i].i = (int) p.aStack[i].r;
+      Release(p, i);
+    } else if ((p.aStack[i].flags & STK_Str) != 0) {
+      p.aStack[i].i = p.zStack[i].atoi();
+      Release(p, i);
+    } else {
+      p.aStack[i].i = 0;
+    }
+    p.aStack[i].flags = STK_Int;
+  }
+
+  /*
+   ** Get a valid Real representation for the given stack element.
+   **
+   ** Any prior string or integer representation is retained.
+   ** NULLs are converted into 0.0.
+   */
+  public static void Realify(Vdbe P, int I) {
+    if (((P).aStack[(I)].flags & STK_Real) == 0) {
+      hardRealify(P, I);
+    }
+  }
+
+  static void hardRealify(Vdbe p, int i) {
+    if ((p.aStack[i].flags & STK_Str) != 0) {
+      p.aStack[i].r = p.zStack[i].atof();
+    } else if ((p.aStack[i].flags & STK_Int) != 0) {
+      p.aStack[i].r = p.aStack[i].i;
+    } else {
+      p.aStack[i].r = 0.0;
+    }
+    p.aStack[i].flags |= STK_Real;
+  }
+
+  /*
+   ** Pop the stack N times.  Free any memory associated with the
+   ** popped stack elements.
+   */
+  static void PopStack(Vdbe p, int N) {
+    if (p.zStack == null) return;
+    while (p.tos >= 0 && N-- > 0) {
+      int i = p.tos--;
+      if ((p.aStack[i].flags & STK_Dyn) != 0) {
+//        sqliteFree(p.zStack[i]);
+      }
+      p.aStack[i].flags = 0;
+      p.zStack[i] = null;
+    }
+  }
+
+  /*
+   ** Make sure space has been allocated to hold at least N
+   ** stack elements.  Allocate additional stack space if
+   ** necessary.
+   **
+   ** Return 0 on success and non-zero if there are memory
+   ** allocation errors.
+   */
+
+  public static int NeedStack(Vdbe P, int N) {
+    return (((P).nStackAlloc <= (N)) ? hardNeedStack(P, N) : 0);
+  }
+
+
+  public static int hardNeedStack(Vdbe p, int N) {
+    int oldAlloc;
+    int i;
+    if (N >= p.nStackAlloc) {
+      oldAlloc = p.nStackAlloc;
+      p.nStackAlloc = N + 20;
+      p.aStack = sqliteRealloc(p.aStack, p.nStackAlloc);// * sizeof(p.aStack[0]));
+      p.zStack = sqliteRealloc(p.zStack, p.nStackAlloc);// * sizeof( char*));
+      for (i = oldAlloc; i < p.nStackAlloc; i++) {
+        p.zStack[i] = null;
+        p.aStack[i].flags = 0;
+      }
+    }
     return 0;
   }
 

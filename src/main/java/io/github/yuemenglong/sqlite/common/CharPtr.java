@@ -120,6 +120,15 @@ public class CharPtr {
     strcpy(new CharPtr(s));
   }
 
+  public int atoi() {
+    return Integer.parseInt(toZeroString());
+  }
+
+  public double atof() {
+    return Double.parseDouble(toZeroString());
+  }
+
+
   public String toZeroString() {
     int i = pos;
     for (; i < cs.length; i++) {

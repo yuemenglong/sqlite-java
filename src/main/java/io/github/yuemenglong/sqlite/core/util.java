@@ -25,16 +25,8 @@ public class util {
    ** works just like sqliteMalloc().  If n==0, then this routine
    ** works just like sqliteFree().
    */
-  CharPtr sqliteRealloc(CharPtr p, int n) {
-    if (p == null) {
-      return new CharPtr(n);
-    }
-    if (n == 0) {
-      return null;
-    }
-    CharPtr ret = new CharPtr(n);
-    ret.memcpy(p, n);
-    return ret;
+  public static <T> T[] sqliteRealloc(T[] arr, int n) {
+    return Arrays.copyOf(arr, n);
   }
 
   public static CharPtr sqliteStrDup(CharPtr z) {
