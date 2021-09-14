@@ -30,6 +30,15 @@ public class CharPtr {
     return cs[++pos];
   }
 
+  public void cpp(char v) {
+    cs[pos++] = v;
+  }
+
+  public void ppc(char v) {
+    cs[++pos] = v;
+  }
+
+
   public void move(int n) {
     pos += n;
   }
@@ -49,10 +58,6 @@ public class CharPtr {
 
   public CharPtr dup() {
     return ptr();
-  }
-
-  public char[] toCharArray() {
-    return cs;
   }
 
   public char get() {
@@ -75,6 +80,10 @@ public class CharPtr {
 
   public void set(int n, int c) {
     cs[pos + n] = (char) c;
+  }
+
+  public int strcmp(CharPtr x){
+    return toZeroString().compareTo(x.toZeroString());
   }
 
   public int strlen() {

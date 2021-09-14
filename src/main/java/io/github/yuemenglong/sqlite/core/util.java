@@ -3,6 +3,7 @@ package io.github.yuemenglong.sqlite.core;
 import io.github.yuemenglong.sqlite.common.Addr;
 import io.github.yuemenglong.sqlite.common.CharPtr;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.yuemenglong.sqlite.common.Util.isdigit;
@@ -81,6 +82,9 @@ public class util {
    ** a length integer.  -1 means use the whole string.
    */
   public static void sqliteSetNString(Addr<CharPtr> pz, Object... args) {
+    if (args.length > 1 && args[args.length - 1] instanceof Integer && ((int) args[args.length - 1] == 0)) {
+      args = Arrays.copyOf(args, args.length - 1);
+    }
     int nByte;
     CharPtr z;
     CharPtr zResult;

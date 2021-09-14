@@ -3,27 +3,27 @@ package io.github.yuemenglong.sqlite.common;
 import java.io.File;
 
 public class Util {
-  public static boolean islower(byte c) {
+  public static boolean islower(int c) {
     return 'a' <= c && c <= 'z';
   }
 
-  public static boolean isupper(byte c) {
+  public static boolean isupper(int c) {
     return 'A' <= c && c <= 'Z';
   }
 
-  public static boolean isalpha(byte c) {
+  public static boolean isalpha(int c) {
     return isupper(c) || islower(c);
   }
 
-  public static boolean isnum(byte c) {
+  public static boolean isnum(int c) {
     return '0' <= c && c <= '9';
   }
 
-  public static boolean isalnum(byte c) {
+  public static boolean isalnum(int c) {
     return isalpha(c) || isnum(c);
   }
 
-  public static boolean isspace(byte c) {
+  public static boolean isspace(int c) {
     switch (c) {
       case ' ':
       case '\t':

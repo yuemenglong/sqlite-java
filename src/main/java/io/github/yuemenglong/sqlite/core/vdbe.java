@@ -6,6 +6,7 @@ import io.github.yuemenglong.sqlite.common.FILE;
 import io.github.yuemenglong.sqlite.common.Ptr;
 import io.github.yuemenglong.sqlite.core.sqliteint.*;
 
+import static io.github.yuemenglong.sqlite.common.Util.isspace;
 import static io.github.yuemenglong.sqlite.core.util.*;
 
 import io.github.yuemenglong.sqlite.core.dbbe.*;
@@ -261,7 +262,7 @@ public class vdbe {
     CharPtr zKey;            /* The key to this AggElem */
     AggElem pHash;        /* Next AggElem with the same hash on zKey */
     AggElem pNext;        /* Next AggElem in a list of them all */
-    Mem[] aMem = new Mem[1];           /* The values for this AggElem */
+    Mem[] aMem;           /* The values for this AggElem */
   }
 
   //
@@ -281,7 +282,7 @@ public class vdbe {
   public static class SetElem {
     SetElem pHash;        /* Next element with the same hash on zKey */
     SetElem pNext;        /* Next element in a list of them all */
-    char[] zKey = new char[1];          /* Value of this key */
+    CharPtr zKey;          /* Value of this key */
   }
 
   //
@@ -388,4 +389,225 @@ public class vdbe {
     }
     return i;
   }
+
+  /*
+   ** Change the value of the P3 operand for a specific instruction.
+   ** This routine is useful when a large program is loaded from a
+   ** static array using sqliteVdbeAddOpList but we want to make a
+   ** few minor changes to the program.
+   */
+  void sqliteVdbeChangeP3(Vdbe p, int addr, CharPtr zP3, int n) {
+    if (p != null && addr >= 0 && p.nOp > addr && zP3 != null) {
+      sqliteSetNString(new Addr<>(() -> p.aOp[addr].p3, v -> p.aOp[addr].p3 = v), zP3, n, 0);
+    }
+  }
+
+  /*
+   ** If the P3 operand to the specified instruction appears
+   ** to be a quoted string token, then this procedure removes
+   ** the quotes.
+   **
+   ** The quoting operator can be either a grave ascent (ASCII 0x27)
+   ** or a double quote character (ASCII 0x22).  Two quotes in a row
+   ** resolve to be a single actual quote character within the string.
+   */
+  void sqliteVdbeDequoteP3(Vdbe p, int addr) {
+    CharPtr z;
+    if (addr < 0 || addr >= p.nOp) return;
+    z = p.aOp[addr].p3;
+    sqliteDequote(z);
+  }
+
+  /*
+   ** On the P3 argument of the given instruction, change all
+   ** strings of whitespace characters into a single space and
+   ** delete leading and trailing whitespace.
+   */
+  void sqliteVdbeCompressSpace(Vdbe p, int addr) {
+    CharPtr z;
+    int i, j;
+    if (addr < 0 || addr >= p.nOp) return;
+    z = p.aOp[addr].p3;
+    i = j = 0;
+    while (isspace(z.get(i))) {
+      i++;
+    }
+    while (z.get(i) != 0) {
+      if (isspace(z.get(i))) {
+        z.set(j++, ' ');
+        while (isspace(z.get(++i))) {
+        }
+      } else {
+        z.set(j++, z.get(i++));
+      }
+    }
+    while (i > 0 && isspace(z.get(i - 1))) {
+      z.set(i - 1, 0);
+      i--;
+    }
+  }
+
+  /*
+   ** Create a new symbolic label for an instruction that has yet to be
+   ** coded.  The symbolic label is really just a negative number.  The
+   ** label can be used as the P2 value of an operation.  Later, when
+   ** the label is resolved to a specific address, the VDBE will scan
+   ** through its operation list and change all values of P2 which match
+   ** the label into the resolved address.
+   **
+   ** The VDBE knows that a P2 value is a label because labels are
+   ** always negative and P2 values are suppose to be non-negative.
+   ** Hence, a negative P2 value is a label that has yet to be resolved.
+   */
+  int sqliteVdbeMakeLabel(Vdbe p) {
+    int i;
+    i = p.nLabel++;
+    if (i >= p.nLabelAlloc) {
+      p.nLabelAlloc = p.nLabelAlloc * 2 + 10;
+      p.aLabel = new Ptr<>(p.nLabelAlloc);//sqliteRealloc( p.aLabel, p.nLabelAlloc*sizeof(int));
+    }
+    p.aLabel.set(i, -1);
+    return -1 - i;
+  }
+
+  /*
+   ** Reset an Agg structure.  Delete all its contents.
+   */
+  static void AggReset(Agg p) {
+    int i;
+    while (p.pFirst != null) {
+      AggElem pElem = p.pFirst;
+      p.pFirst = pElem.pNext;
+      for (i = 0; i < p.nMem; i++) {
+        if ((pElem.aMem[i].s.flags & STK_Dyn) != 0) {
+//          sqliteFree(pElem.aMem[i].z);
+        }
+      }
+//      sqliteFree(pElem);
+    }
+//    sqliteFree(p.apHash);
+//    memset(p, 0, sizeof(*p));
+  }
+
+  /*
+   ** Add the given AggElem to the hash array
+   */
+  static void AggEnhash(Agg p, AggElem pElem) {
+    int h = sqliteHashNoCase(pElem.zKey, 0) % p.nHash;
+    pElem.pHash = p.apHash[h];
+    p.apHash[h] = pElem;
+  }
+
+  /*
+   ** Change the size of the hash array to the amount given.
+   */
+  static void AggRehash(Agg p, int nHash) {
+    int size;
+    AggElem pElem;
+    if (p.nHash == nHash) return;
+//    size = nHash * sizeof(AggElem *);
+    p.apHash = new AggElem[nHash];//sqliteRealloc(p.apHash, size);
+//    memset(p.apHash, 0, size);
+    p.nHash = nHash;
+    for (pElem = p.pFirst; pElem != null; pElem = pElem.pNext) {
+      AggEnhash(p, pElem);
+    }
+  }
+
+  /*
+   ** Insert a new element and make it the current element.
+   **
+   ** Return 0 on success and 1 if memory is exhausted.
+   */
+  static int AggInsert(Agg p, CharPtr zKey) {
+    AggElem pElem;
+    int i;
+    if (p.nHash <= p.nElem * 2) {
+      AggRehash(p, p.nElem * 2 + 19);
+    }
+    if (p.nHash == 0) return 1;
+    pElem = new AggElem();
+//    pElem = sqliteMalloc(sizeof(AggElem) + strlen(zKey) + 1 +
+//            (p.nMem - 1) * sizeof(pElem.aMem[0]));
+    pElem.aMem = new Mem[p.nMem];
+//    pElem.zKey = ( char*)&pElem.aMem[p.nMem];
+    pElem.zKey = new CharPtr(zKey.strlen() + 1);// (char*)&pElem.aMem[p.nMem];
+    pElem.zKey.strcpy(zKey);
+    AggEnhash(p, pElem);
+    pElem.pNext = p.pFirst;
+    p.pFirst = pElem;
+    p.nElem++;
+    p.pCurrent = pElem;
+    for (i = 0; i < p.nMem; i++) {
+      pElem.aMem[i].s.flags = STK_Null;
+    }
+    return 0;
+  }
+
+  /*
+   ** Get the AggElem currently in focus
+   */
+
+  /*
+   ** Get the AggElem currently in focus
+   */
+//        #define AggInFocus(P)   ((P).pCurrent ? (P).pCurrent : _AggInFocus(&(P)))
+  public static AggElem AggInFocus(Agg P) {
+    return P.pCurrent != null ? P.pCurrent : _AggInFocus(P);
+  }
+
+  public static AggElem _AggInFocus(Agg p) {
+    AggElem pFocus = p.pFirst;
+    if (pFocus != null) {
+      p.pCurrent = pFocus;
+    } else {
+      AggInsert(p, new CharPtr(""));
+      pFocus = p.pCurrent = p.pFirst;
+    }
+    return pFocus;
+  }
+
+  /*
+   ** Erase all information from a Set
+   */
+  static void SetClear(Set p) {
+    SetElem pElem, pNext;
+    for (pElem = p.pAll; pElem != null; pElem = pNext) {
+      pNext = pElem.pNext;
+//      sqliteFree(pElem);
+    }
+//    memset(p, 0, sizeof( * p));
+  }
+
+  /*
+   ** Insert a new element into the set
+   */
+  static void SetInsert(Set p, CharPtr zKey) {
+    SetElem pElem;
+    int h = sqliteHashNoCase(zKey, 0) % (p.apHash.length);
+    for (pElem = p.apHash[h]; pElem != null; pElem = pElem.pHash) {
+      if (pElem.zKey.strcmp(zKey) == 0) return;
+    }
+    pElem = new SetElem();//sqliteMalloc(sizeof( * pElem) + strlen(zKey) );
+    pElem.zKey = new CharPtr(zKey.strlen());
+    pElem.zKey.strcpy(zKey);
+//    strcpy(pElem.zKey, zKey);
+    pElem.pNext = p.pAll;
+    p.pAll = pElem;
+    pElem.pHash = p.apHash[h];
+    p.apHash[h] = pElem;
+  }
+
+  /*
+   ** Return TRUE if an element is in the set.  Return FALSE if not.
+   */
+  static int SetTest(Set p, CharPtr zKey) {
+    SetElem pElem;
+    int h = sqliteHashNoCase(zKey, 0) % (p.apHash.length);
+    for (pElem = p.apHash[h]; pElem != null; pElem = pElem.pHash) {
+      if ((pElem.zKey.strcmp(zKey)) == 0) return 1;
+    }
+    return 0;
+  }
+
 }
