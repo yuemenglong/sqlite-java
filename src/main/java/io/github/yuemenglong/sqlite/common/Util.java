@@ -11,6 +11,14 @@ public class Util {
     return 'A' <= c && c <= 'Z';
   }
 
+  public static char toupper(int c) {
+    return (char) (c + 'A' - 'a');
+  }
+
+  public static char tolower(int c) {
+    return (char) (c + 'a' - 'A');
+  }
+
   public static boolean isalpha(int c) {
     return isupper(c) || islower(c);
   }
@@ -86,5 +94,9 @@ public class Util {
 
   public static int LINE() {
     return Thread.currentThread().getStackTrace()[1].getLineNumber();
+  }
+
+  public static void unlink(String path) {
+    new File(path).delete();
   }
 }

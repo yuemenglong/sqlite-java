@@ -30,7 +30,7 @@ public class vdbe {
     int opcode;         /* What operation to perform */
     int p1;             /* First operand */
     int p2;             /* Second parameter (often the jump destination) */
-    CharPtr p3;           /* Third parameter */
+    CharPtr p3 = new CharPtr(0);           /* Third parameter */
   }
 
   /*
@@ -443,7 +443,7 @@ public class vdbe {
    */
   void sqliteVdbeChangeP3(Vdbe p, int addr, CharPtr zP3, int n) {
     if (p != null && addr >= 0 && p.nOp > addr && zP3 != null) {
-      sqliteSetNString(new Addr<>(() -> p.aOp[addr].p3, v -> p.aOp[addr].p3 = v), zP3, n, 0);
+      sqliteSetNString(p.aOp[addr].p3, zP3, n, 0);
     }
   }
 

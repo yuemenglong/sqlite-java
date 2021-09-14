@@ -6,11 +6,15 @@ import java.util.Arrays;
 public class CharPtr {
 
   private int pos = 0;
-  private final char[] cs;
+  private char[] cs;
 
   public CharPtr(String s) {
     this.cs = Arrays.copyOf(s.toCharArray(), s.length() + 1);
     this.cs[cs.length - 1] = 0;
+  }
+
+  public CharPtr() {
+    this(1);
   }
 
   public CharPtr(int len) {
@@ -84,6 +88,11 @@ public class CharPtr {
 
   public int strcmp(CharPtr x) {
     return toZeroString().compareTo(x.toZeroString());
+  }
+
+  public void update(CharPtr x) {
+    cs = Arrays.copyOf(x.cs, x.cs.length);
+    pos = x.pos;
   }
 
   public int strlen() {

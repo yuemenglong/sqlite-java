@@ -6,8 +6,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class FILE {
-  public final InputStream is;
-  public final OutputStream os;
+  public InputStream is;
+  public OutputStream os;
   public final String path;
 
   private FILE(String path, InputStream is, OutputStream os) {
@@ -33,4 +33,18 @@ public class FILE {
   }
 
 
+  public void close() {
+    try {
+      if (is != null) {
+        is.close();
+      }
+      if (os != null) {
+        os.close();
+      }
+      is = null;
+      os = null;
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

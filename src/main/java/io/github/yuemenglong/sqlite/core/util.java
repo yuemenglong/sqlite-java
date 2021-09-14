@@ -50,7 +50,7 @@ public class util {
 //** sqliteMalloc() and make the pointer indicated by the 1st argument
 //** point to that string.
 //*/
-  public static void sqliteSetString(Addr<CharPtr> pz, CharPtr zFirst, CharPtr... args) {
+  public static void sqliteSetString(CharPtr pz, CharPtr zFirst, CharPtr... args) {
     int nByte;
     CharPtr zResult;
 
@@ -60,7 +60,7 @@ public class util {
       nByte += arg.strlen();
     }
     zResult = new CharPtr(nByte);
-    pz.set(zResult.dup());
+    pz.update(zResult);
     zResult.strcpy(zFirst);
     zResult.move(zResult.strlen());
     for (CharPtr arg : args) {
@@ -73,7 +73,7 @@ public class util {
    ** Works like sqliteSetString, but each string is now followed by
    ** a length integer.  -1 means use the whole string.
    */
-  public static void sqliteSetNString(Addr<CharPtr> pz, Object... args) {
+  public static void sqliteSetNString(CharPtr pz, Object... args) {
     if (args.length > 1 && args[args.length - 1] instanceof Integer && ((int) args[args.length - 1] == 0)) {
       args = Arrays.copyOf(args, args.length - 1);
     }
@@ -90,7 +90,7 @@ public class util {
       nByte += n;
     }
     zResult = new CharPtr(nByte + 1);
-    pz.set(zResult.dup());
+    pz.update(zResult);
     for (int i = 1; i < args.length; i += 2) {
       z = (CharPtr) args[i - 1];
       n = (int) args[i];
