@@ -5,6 +5,7 @@ import io.github.yuemenglong.sqlite.common.CharPtr;
 import io.github.yuemenglong.sqlite.common.FILE;
 import io.github.yuemenglong.sqlite.common.GDBM.*;
 
+import static io.github.yuemenglong.sqlite.common.GDBM.GDBM_REPLACE;
 import static io.github.yuemenglong.sqlite.common.Util.*;
 import static io.github.yuemenglong.sqlite.core.sqlite.*;
 import static io.github.yuemenglong.sqlite.core.util.*;
@@ -439,6 +440,273 @@ public class dbbe {
 //    if (p.dptr!=null) free(p.dptr);
     p.dptr = null;
     p.dsize = 0;
+  }
+
+
+  /*
+   ** Fetch a single record from an open cursor.  Return 1 on success
+   ** and 0 on failure.
+   */
+  int sqliteDbbeFetch(DbbeCursor pCursr, int nKey, CharPtr pKey) {
+    datum key = new datum();
+    key.dsize = nKey;
+    key.dptr = pKey;
+    datumClear(pCursr.key);
+    datumClear(pCursr.data);
+    if (pCursr.pFile != null && pCursr.pFile.dbf != null) {
+      pCursr.data = pCursr.pFile.dbf.gdbm_fetch(key);
+    }
+    return pCursr.data.dptr != null ? 1 : 0;
+  }
+
+  /*
+   ** Return 1 if the given key is already in the table.  Return 0
+   ** if it is not.
+   */
+  int sqliteDbbeTest(DbbeCursor pCursr, int nKey, CharPtr pKey) {
+    datum key = new datum();
+    int result = 0;
+    key.dsize = nKey;
+    key.dptr = pKey;
+    if (pCursr.pFile != null && pCursr.pFile.dbf != null) {
+      result = pCursr.pFile.dbf.gdbm_exists(key);
+    }
+    return result;
+  }
+
+  /*
+   ** Copy bytes from the current key or data into a buffer supplied by
+   ** the calling function.  Return the number of bytes copied.
+   */
+  int sqliteDbbeCopyKey(DbbeCursor pCursr, int offset, int size, CharPtr zBuf) {
+    int n;
+    if (offset >= pCursr.key.dsize) return 0;
+    if (offset + size > pCursr.key.dsize) {
+      n = pCursr.key.dsize - offset;
+    } else {
+      n = size;
+    }
+    zBuf.memcpy(pCursr.key.dptr.ptr(offset), n);
+//    memcpy(zBuf, & pCursr.key.dptr[offset], n);
+    return n;
+  }
+
+  int sqliteDbbeCopyData(DbbeCursor pCursr, int offset, int size, CharPtr zBuf) {
+    int n;
+    if (pCursr.readPending != 0 && pCursr.pFile != null && pCursr.pFile.dbf != null) {
+      pCursr.data = pCursr.pFile.dbf.gdbm_fetch(pCursr.key);
+      pCursr.readPending = 0;
+    }
+    if (offset >= pCursr.data.dsize) return 0;
+    if (offset + size > pCursr.data.dsize) {
+      n = pCursr.data.dsize - offset;
+    } else {
+      n = size;
+    }
+//    memcpy(zBuf, & pCursr.data.dptr[offset], n);
+    zBuf.memcpy(pCursr.data.dptr.ptr(offset), n);
+    return n;
+  }
+
+  /*
+   ** Return a pointer to bytes from the key or data.  The data returned
+   ** is ephemeral.
+   */
+  CharPtr sqliteDbbeReadKey(DbbeCursor pCursr, int offset) {
+    if (offset < 0 || offset >= pCursr.key.dsize) return new CharPtr("");
+    return pCursr.key.dptr.ptr(offset);
+  }
+
+  CharPtr sqliteDbbeReadData(DbbeCursor pCursr, int offset) {
+    if (pCursr.readPending != 0 && pCursr.pFile != null && pCursr.pFile.dbf != null) {
+      pCursr.data = pCursr.pFile.dbf.gdbm_fetch(pCursr.key);
+      pCursr.readPending = 0;
+    }
+    if (offset < 0 || offset >= pCursr.data.dsize) return new CharPtr("");
+    return pCursr.data.dptr.ptr(offset);
+  }
+
+  /*
+   ** Return the total number of bytes in either data or key.
+   */
+  int sqliteDbbeKeyLength(DbbeCursor pCursr) {
+    return pCursr.key.dsize;
+  }
+
+  int sqliteDbbeDataLength(DbbeCursor pCursr) {
+    if (pCursr.readPending != 0 && pCursr.pFile != null && pCursr.pFile.dbf != null) {
+      pCursr.data = pCursr.pFile.dbf.gdbm_fetch(pCursr.key);
+      pCursr.readPending = 0;
+    }
+    return pCursr.data.dsize;
+  }
+
+  /*
+   ** Make is so that the next call to sqliteNextKey() finds the first
+   ** key of the table.
+   */
+  int sqliteDbbeRewind(DbbeCursor pCursr) {
+    pCursr.needRewind = 1;
+    return SQLITE_OK;
+  }
+
+  /*
+   ** Read the next key from the table.  Return 1 on success.  Return
+   ** 0 if there are no more keys.
+   */
+  int sqliteDbbeNextKey(DbbeCursor pCursr) {
+    datum nextkey;
+    int rc;
+    if (pCursr == null) {
+      return 0;
+    }
+    if (pCursr.pFile == null || pCursr.pFile.dbf == null) {
+      pCursr.readPending = 0;
+      return 0;
+    }
+    if (pCursr.needRewind != 0) {
+      nextkey = pCursr.pFile.dbf.gdbm_firstkey();
+      pCursr.needRewind = 0;
+    } else {
+      nextkey = pCursr.pFile.dbf.gdbm_nextkey(pCursr.key);
+    }
+    datumClear(pCursr.key);
+    datumClear(pCursr.data);
+    pCursr.key = nextkey;
+    if (pCursr.key.dptr != null) {
+      pCursr.readPending = 1;
+      rc = 1;
+    } else {
+      pCursr.needRewind = 1;
+      pCursr.readPending = 0;
+      rc = 0;
+    }
+    return rc;
+  }
+
+  /*
+   ** Get a new integer key.
+   */
+  int sqliteDbbeNew(DbbeCursor pCursr) {
+    int iKey = 0;
+    datum key = new datum();
+    int go = 1;
+    int i;
+    rc4 pRc4;
+
+    if (pCursr.pFile == null || pCursr.pFile.dbf == null) return 1;
+    pRc4 = pCursr.pBe.rc4;
+    while (go != 0) {
+      iKey = 0;
+      for (i = 0; i < 4; i++) {
+        iKey = (iKey << 8) + rc4byte(pRc4);
+      }
+      if (iKey == 0) continue;
+//      key.dptr = ( char*)&iKey;
+      key.dptr = CharPtr.fromInt(iKey);
+      key.dsize = 4;
+      go = pCursr.pFile.dbf.gdbm_exists(key);
+    }
+    return iKey;
+  }
+
+  /*
+   ** Write an entry into the table.  Overwrite any prior entry with the
+   ** same key.
+   */
+  int sqliteDbbePut(DbbeCursor pCursr, int nKey, CharPtr pKey, int nData, CharPtr pData) {
+    datum data = new datum();
+    datum key = new datum();
+    int rc;
+    if (pCursr.pFile == null || pCursr.pFile.dbf == null) return SQLITE_ERROR;
+    data.dsize = nData;
+    data.dptr = pData;
+    key.dsize = nKey;
+    key.dptr = pKey;
+    rc = pCursr.pFile.dbf.gdbm_store(key, data, GDBM_REPLACE);
+    if (rc != 0) rc = SQLITE_ERROR;
+    datumClear(pCursr.key);
+    datumClear(pCursr.data);
+    return rc;
+  }
+
+  /*
+   ** Remove an entry from a table, if the entry exists.
+   */
+  int sqliteDbbeDelete(DbbeCursor pCursr, int nKey, CharPtr pKey) {
+    datum key = new datum();
+    int rc;
+    datumClear(pCursr.key);
+    datumClear(pCursr.data);
+    if (pCursr.pFile == null || pCursr.pFile.dbf == null) return SQLITE_ERROR;
+    key.dsize = nKey;
+    key.dptr = pKey;
+    rc = pCursr.pFile.dbf.gdbm_delete(key);
+    if (rc != 0) rc = SQLITE_ERROR;
+    return rc;
+  }
+
+  /*
+   ** Open a temporary file.  The file should be deleted when closed.
+   **
+   ** Note that we can't use the old Unix trick of opening the file
+   ** and then immediately unlinking the file.  That works great
+   ** under Unix, but fails when we try to port to Windows.
+   */
+  int sqliteDbbeOpenTempFile(Dbbe pBe, Addr<FILE> ppFile) {
+    CharPtr zFile;         /* Full name of the temporary file */
+    CharPtr zBuf = new CharPtr(50);       /* Base name of the temporary file */
+    int i;               /* Loop counter */
+    int limit;           /* Prevent an infinite loop */
+    int rc = SQLITE_OK;  /* Value returned by this function */
+
+    for (i = 0; i < pBe.nTemp; i++) {
+      if (pBe.apTemp[i] == null) break;
+    }
+    if (i >= pBe.nTemp) {
+      pBe.nTemp++;
+      pBe.apTemp = sqliteRealloc(pBe.apTemp, pBe.nTemp);
+      pBe.azTemp = sqliteRealloc(pBe.azTemp, pBe.nTemp);
+    }
+    if (pBe.apTemp == null) {
+      ppFile.set(null);
+      return SQLITE_NOMEM;
+    }
+    limit = 4;
+    zFile = null;
+    do {
+      randomName(pBe.rc4, zBuf, new CharPtr("/_temp_file_"));
+//      sqliteFree(zFile);
+      zFile = new CharPtr();
+      sqliteSetString(zFile, pBe.zDir, zBuf);
+    } while (access(zFile.toZeroString(), 0) == 0 && limit-- >= 0);
+    ppFile.set(pBe.apTemp[i] = FILE.openWriteAppend(zFile.toZeroString()));
+    if (pBe.apTemp[i] == null) {
+      rc = SQLITE_ERROR;
+//      sqliteFree(zFile);
+      pBe.azTemp[i] = null;
+    } else {
+      pBe.azTemp[i] = zFile;
+    }
+    return rc;
+  }
+
+  /*
+   ** Close a temporary file opened using sqliteDbbeOpenTempFile()
+   */
+  void sqliteDbbeCloseTempFile(Dbbe pBe, FILE f) {
+    int i;
+    for (i = 0; i < pBe.nTemp; i++) {
+      if (pBe.apTemp[i] == f) {
+        unlink(pBe.azTemp[i].toZeroString());
+//        sqliteFree(pBe.azTemp[i]);
+        pBe.apTemp[i] = null;
+        pBe.azTemp[i] = null;
+        break;
+      }
+    }
+    f.close();
+//    fclose(f);
   }
 
 }

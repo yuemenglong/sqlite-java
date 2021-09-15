@@ -26,6 +26,15 @@ public class CharPtr {
     this.pos = pos;
   }
 
+  public static CharPtr fromInt(int value) {
+    char[] data = new char[4];
+    data[0] = (char) (value >> 0);
+    data[1] = (char) (value >> 8);
+    data[2] = (char) (value >> 16);
+    data[3] = (char) (value >> 24);
+    return new CharPtr(data, 0);
+  }
+
   public char cpp() {
     return cs[pos++];
   }

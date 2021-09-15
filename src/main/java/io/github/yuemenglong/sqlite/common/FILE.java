@@ -32,6 +32,14 @@ public class FILE {
     }
   }
 
+  public static FILE openWriteAppend(String path) {
+    try {
+      return new FILE(path, null, new FileOutputStream(path, true));
+    } catch (Throwable e) {
+      return null;
+    }
+  }
+
 
   public void close() {
     try {
