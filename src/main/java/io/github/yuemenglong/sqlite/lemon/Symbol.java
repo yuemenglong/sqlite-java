@@ -58,7 +58,7 @@ public class Symbol {
   public static void init() {
     if (x2a != null) return;
     x2a = new Table<>();
-    x2a.init(128);
+    x2a.init(4096);
   }
 
   public static int insert(Symbol data, String key) {

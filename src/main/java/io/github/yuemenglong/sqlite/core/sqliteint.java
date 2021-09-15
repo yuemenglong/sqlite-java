@@ -35,33 +35,33 @@ public class sqliteint {
   public static final int SQLITE_FileFormat = 2;
 
   public static class Column {
-    String zName;     /* Name of this column */
-    String zDflt;     /* Default value of this column */
+    CharPtr zName;     /* Name of this column */
+    CharPtr zDflt;     /* Default value of this column */
     int notNull;     /* True if there is a NOT NULL constraint */
   }
 
   public static class Table {
-    String zName;     /* Name of the table */
+    CharPtr zName;     /* Name of the table */
     Table pHash;    /* Next table with same hash on zName */
     int nCol;        /* Number of columns in this table */
-    Column aCol;    /* Information about each column */
+    Column[] aCol;    /* Information about each column */
     int readOnly;    /* True if this table should not be written by the user */
     Index pIndex;   /* List of SQL indexes on this table. */
   }
 
   public static class Index {
-    String zName;     /* Name of this index */
+    CharPtr zName;     /* Name of this index */
     Index pHash;    /* Next index with the same hash on zName */
     int nColumn;     /* Number of columns in the table used by this index */
     //    int *aiColumn;   /* Which columns are used by this index.  1st is 0 */
-    Addr<Integer> aiColumn;   /* Which columns are used by this index.  1st is 0 */
+    int[] aiColumn;   /* Which columns are used by this index.  1st is 0 */
     Table pTable;   /* The SQL table being indexed */
     int isUnique;    /* True if keys must all be unique */
     Index pNext;    /* The next index associated with the same table */
   }
 
   public static class Token {
-    String z;      /* Text of the token */
+    CharPtr z;      /* Text of the token */
     int n;        /* Number of characters in this token */
   }
 
@@ -82,14 +82,14 @@ public class sqliteint {
 
   public static class ExprList {
     int nExpr;             /* Number of expressions on the list */
-    A a;
+    A[] a;
 
     public static class A {
       Expr pExpr;           /* The list of expressions */
-      String zName;           /* Token associated with this expression */
-      char sortOrder;        /* 1 for DESC or 0 for ASC */
-      char isAgg;            /* True if this is an aggregate like count(*) */
-      char done;             /* A flag to indicate when processing is finished */
+      CharPtr zName;           /* Token associated with this expression */
+      int sortOrder;        /* 1 for DESC or 0 for ASC */
+      int isAgg;            /* True if this is an aggregate like count(*) */
+      int done;             /* A flag to indicate when processing is finished */
     }                 /* One entry for each expression */
   }
 
@@ -99,11 +99,11 @@ public class sqliteint {
   //*/
   public static class IdList {
     int nId;         /* Number of identifiers on the list */
-    A a;
+    A[] a;
 
     public static class A {
-      String zName;      /* Text of the identifier. */
-      String zAlias;     /* The "B" part of a "A AS B" phrase.  zName is the "A" */
+      CharPtr zName;      /* Text of the identifier. */
+      CharPtr zAlias;     /* The "B" part of a "A AS B" phrase.  zName is the "A" */
       Table pTab;      /* An SQL table corresponding to zName */
       int idx;          /* Index in some Table.aCol[] of a column named zName */
     }
@@ -206,7 +206,7 @@ public class sqliteint {
     int nMem;            /* Number of memory cells used so far */
     int nSet;            /* Number of sets used so far */
     int nAgg;            /* Number of aggregate expressions */
-    AggExpr aAgg;       /* An array of aggregate expressions */
+    AggExpr[] aAgg;       /* An array of aggregate expressions */
     int iAggCount;       /* Index of the count(*) aggregate in aAgg[] */
     int useAgg;          /* If true, extract field values from the aggregator
      ** while generating expressions.  Normally false */

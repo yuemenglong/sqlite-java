@@ -1,21 +1,17 @@
 package io.github.yuemenglong.sqlite.core;
 
-import io.github.yuemenglong.sqlite.common.Addr;
-import io.github.yuemenglong.sqlite.common.CharPtr;
-import io.github.yuemenglong.sqlite.common.FILE;
-import io.github.yuemenglong.sqlite.common.Ptr;
+import io.github.yuemenglong.sqlite.common.*;
 import io.github.yuemenglong.sqlite.core.sqliteint.*;
 
 import static io.github.yuemenglong.sqlite.common.Util.isspace;
 import static io.github.yuemenglong.sqlite.core.dbbe.*;
-import static io.github.yuemenglong.sqlite.core.sqlite.SQLITE_ABORT;
-import static io.github.yuemenglong.sqlite.core.sqlite.SQLITE_OK;
+import static io.github.yuemenglong.sqlite.core.sqliteH.SQLITE_ABORT;
+import static io.github.yuemenglong.sqlite.core.sqliteH.SQLITE_OK;
 import static io.github.yuemenglong.sqlite.core.util.*;
 
 import io.github.yuemenglong.sqlite.core.dbbe.*;
 
 import java.util.Arrays;
-import java.util.function.IntFunction;
 
 
 @SuppressWarnings("unused")
@@ -364,6 +360,11 @@ public class vdbe {
    ** prior and subsequent instructions that have the lbl value in
    ** their p2 fields.
    */
+  public static int sqliteVdbeAddOp(Vdbe p, int op, int p1, int p2, int p3, int lbl) {
+    Assert.assertTrue(p3 == 0);
+    return sqliteVdbeAddOp(p, op, p1, p2, null, lbl);
+  }
+
   public static int sqliteVdbeAddOp(Vdbe p, int op, int p1, int p2, CharPtr p3, int lbl) {
     int i, j;
 

@@ -35,6 +35,10 @@ public class CharPtr {
     return new CharPtr(data, 0);
   }
 
+  public int pos() {
+    return pos;
+  }
+
   public char cpp() {
     return cs[pos++];
   }
@@ -133,7 +137,7 @@ public class CharPtr {
     }
   }
 
-  public void sprintf(String fmt, Object args) {
+  public void sprintf(String fmt, Object... args) {
     String s = String.format(fmt, args);
     strcpy(new CharPtr(s));
   }

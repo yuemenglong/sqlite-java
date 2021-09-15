@@ -3,6 +3,7 @@ package io.github.yuemenglong.sqlite.core;
 import io.github.yuemenglong.sqlite.common.Addr;
 import io.github.yuemenglong.sqlite.common.CharPtr;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -10,14 +11,10 @@ import static io.github.yuemenglong.sqlite.common.Util.isdigit;
 
 public class util {
 
-  CharPtr sqliteMalloc(int n) {
-    return new CharPtr(n);
-  }
-
   /*
    ** Free memory previously obtained from sqliteMalloc()
    */
-  void sqliteFree(CharPtr p) {
+  public static void sqliteFree(Object o) {
   }
 
   /*
@@ -50,19 +47,27 @@ public class util {
 //** sqliteMalloc() and make the pointer indicated by the 1st argument
 //** point to that string.
 //*/
-  public static void sqliteSetString(CharPtr pz, CharPtr zFirst, CharPtr... args) {
+  public static void sqliteSetString(CharPtr pz, Object... os) {
     int nByte;
     CharPtr zResult;
+    ArrayList<CharPtr> args = new ArrayList<>();
+    for (Object o : os) {
+      if (o instanceof CharPtr) {
+        args.add((CharPtr) o);
+      } else if (o instanceof String) {
+        args.add(new CharPtr((String) o));
+      }
+    }
 
     if (pz == null) return;
-    nByte = zFirst.strlen() + 1;
+    nByte = 1;
     for (CharPtr arg : args) {
       nByte += arg.strlen();
     }
     zResult = new CharPtr(nByte);
     pz.update(zResult);
-    zResult.strcpy(zFirst);
-    zResult.move(zResult.strlen());
+//    zResult.strcpy(zFirst);
+//    zResult.move(zResult.strlen());
     for (CharPtr arg : args) {
       zResult.strcpy(arg);
       zResult.move(arg.strlen());
@@ -74,7 +79,10 @@ public class util {
    ** a length integer.  -1 means use the whole string.
    */
   public static void sqliteSetNString(CharPtr pz, Object... args) {
-    if (args.length > 1 && args[args.length - 1] instanceof Integer && ((int) args[args.length - 1] == 0)) {
+    if (args.length > 1 &&
+            args.length % 2 == 1 &&
+            args[args.length - 1] instanceof Integer &&
+            ((int) args[args.length - 1] == 0)) {
       args = Arrays.copyOf(args, args.length - 1);
     }
     int nByte;

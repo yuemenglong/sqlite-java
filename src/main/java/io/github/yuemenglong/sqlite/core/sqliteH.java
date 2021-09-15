@@ -1,6 +1,6 @@
 package io.github.yuemenglong.sqlite.core;
 
-public class sqlite {
+public class sqliteH {
   //  typedef int (*sqlite_callback)(void*,int,char**, char**);
 
   public static final int SQLITE_OK = 0;    /* Successful result */

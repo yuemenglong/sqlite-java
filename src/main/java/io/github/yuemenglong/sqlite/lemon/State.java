@@ -44,7 +44,7 @@ public class State {
     x3a = new Table<>();
     x3a.setHasher(State::hash);
     x3a.setComparator(State::comp);
-    x3a.init(128);
+    x3a.init(4096);
   }
 
   public static int insert(State data, Config key) {

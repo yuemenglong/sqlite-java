@@ -2,7 +2,7 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.lemon.common.IList;
 import io.github.yuemenglong.sqlite.common.Addr;
-import io.github.yuemenglong.sqlite.lemon.util.Assert;
+import io.github.yuemenglong.sqlite.common.Assert;
 
 @SuppressWarnings("UnnecessaryReturnStatement")
 public class Configlist {

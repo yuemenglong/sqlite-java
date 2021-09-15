@@ -47,7 +47,7 @@ public class Parse {
             psp.prevrule.line = psp.tokenlineno;
             psp.prevrule.code = x.substring(1);
           }
-        } else if (x.charAt('0') == '[') {
+        } else if (b[0] == '[') {
           psp.state = PRECEDENCE_MARK_1;
         } else {
           Error.msg(psp.filename, psp.tokenlineno,

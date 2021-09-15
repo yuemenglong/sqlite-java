@@ -1,7 +1,7 @@
 package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.common.Addr;
-import io.github.yuemenglong.sqlite.lemon.util.Assert;
+import io.github.yuemenglong.sqlite.common.Assert;
 import io.github.yuemenglong.sqlite.lemon.util.Replacer;
 
 import java.io.*;
@@ -405,7 +405,7 @@ public class Report {
       byte[] b = s.getBytes();
       cp = 0;
       j = 0;
-      stddt = new byte[s.length()];
+      stddt = new byte[maxdtlength * 2 + 1];
       while (isspace(b[cp])) cp++;
       while (cp < b.length) stddt[j++] = b[cp++];
       while (j > 0 && isspace(stddt[j - 1])) j--;

@@ -5,9 +5,9 @@ import io.github.yuemenglong.sqlite.common.CharPtr;
 import io.github.yuemenglong.sqlite.common.FILE;
 import io.github.yuemenglong.sqlite.common.GDBM.*;
 
-import static io.github.yuemenglong.sqlite.common.GDBM.GDBM_REPLACE;
+import static io.github.yuemenglong.sqlite.common.GDBM.*;
 import static io.github.yuemenglong.sqlite.common.Util.*;
-import static io.github.yuemenglong.sqlite.core.sqlite.*;
+import static io.github.yuemenglong.sqlite.core.sqliteH.*;
 import static io.github.yuemenglong.sqlite.core.util.*;
 
 import java.io.File;

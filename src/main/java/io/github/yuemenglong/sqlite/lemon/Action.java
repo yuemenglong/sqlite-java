@@ -2,7 +2,7 @@ package io.github.yuemenglong.sqlite.lemon;
 
 import io.github.yuemenglong.sqlite.lemon.common.IList;
 import io.github.yuemenglong.sqlite.common.Addr;
-import io.github.yuemenglong.sqlite.lemon.util.Assert;
+import io.github.yuemenglong.sqlite.common.Assert;
 
 import static io.github.yuemenglong.sqlite.lemon.Action.Type.REDUCE;
 import static io.github.yuemenglong.sqlite.lemon.Action.Type.SHIFT;

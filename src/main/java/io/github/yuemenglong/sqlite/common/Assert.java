@@ -1,4 +1,4 @@
-package io.github.yuemenglong.sqlite.lemon.util;
+package io.github.yuemenglong.sqlite.common;
 
 public class Assert {
   public static void assertTrue(boolean v) {

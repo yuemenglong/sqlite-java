@@ -1,61 +1,65 @@
 package io.github.yuemenglong.sqlite.core;
 
+import io.github.yuemenglong.sqlite.common.Assert;
+import io.github.yuemenglong.sqlite.common.CharPtr;
 import io.github.yuemenglong.sqlite.common.FILE;
 import io.github.yuemenglong.sqlite.core.sqliteint.*;
 
+import static io.github.yuemenglong.sqlite.core.parse.TK_FUNCTION;
+import static io.github.yuemenglong.sqlite.core.select.sqliteSelectDelete;
 import static io.github.yuemenglong.sqlite.core.sqliteint.*;
+import static io.github.yuemenglong.sqlite.core.util.*;
 import static io.github.yuemenglong.sqlite.core.vdbe.*;
 
 public class build {
-  ///*
-  //** Copyright (c) 1999, 2000 D. Richard Hipp
-  //**
-  //** This program is free software; you can redistribute it and/or
-  //** modify it under the terms of the GNU General Public
-  //** License as published by the Free Software Foundation; either
-  //** version 2 of the License, or (at your option) any later version.
-  //**
-  //** This program is distributed in the hope that it will be useful,
-  //** but WITHOUT ANY WARRANTY; without even the implied warranty of
-  //** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  //** General Public License for more details.
-  //**
-  //** You should have received a copy of the GNU General Public
-  //** License along with this library; if not, write to the
-  //** Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-  //** Boston, MA  02111-1307, USA.
-  //**
-  //** Author contact information:
-  //**   drh@hwaci.com
-  //**   http://www.hwaci.com/drh/
-  //**
-  //*************************************************************************
-  //** This file contains C code routines that are called by the parser
-  //** when syntax rules are reduced.  The routines in this file handle
-  //** the following kinds of syntax:
-  //**
-  //**     CREATE TABLE
-  //**     DROP TABLE
-  //**     CREATE INDEX
-  //**     DROP INDEX
-  //**     creating expressions and ID lists
-  //**     COPY
-  //**     VACUUM
-  //**
-  //** $Id: build.c,v 1.23 2000/08/03 15:09:20 drh Exp $
-  //*/
-  //#include "sqliteInt.h"
-  //
-  ///*
-  //** This routine is called after a single SQL statement has been
-  //** parsed and we want to execute the VDBE code to implement
-  //** that statement.  Prior action routines should have already
-  //** constructed VDBE code to do the work of the SQL statement.
-  //** This routine just has to execute the VDBE code.
-  //**
-  //** Note that if an error occurred, it might be the case that
-  //** no VDBE code was generated.
-  //*/
+  /*
+  ** Copyright (c) 1999, 2000 D. Richard Hipp
+  **
+  ** This program is free software; you can redistribute it and/or
+  ** modify it under the terms of the GNU General Public
+  ** License as published by the Free Software Foundation; either
+  ** version 2 of the License, or (at your option) any later version.
+  **
+  ** This program is distributed in the hope that it will be useful,
+  ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ** General Public License for more details.
+  **
+  ** You should have received a copy of the GNU General Public
+  ** License along with this library; if not, write to the
+  ** Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+  ** Boston, MA  02111-1307, USA.
+  **
+  ** Author contact information:
+  **   drh@hwaci.com
+  **   http://www.hwaci.com/drh/
+  **
+  *************************************************************************
+  ** This file contains C code routines that are called by the parser
+  ** when syntax rules are reduced.  The routines in this file handle
+  ** the following kinds of syntax:
+  **
+  **     CREATE TABLE
+  **     DROP TABLE
+  **     CREATE INDEX
+  **     DROP INDEX
+  **     creating expressions and ID lists
+  **     COPY
+  **     VACUUM
+  **
+  ** $Id: build.c,v 1.23 2000/08/03 15:09:20 drh Exp $
+  */
+
+  /*
+  ** This routine is called after a single SQL statement has been
+  ** parsed and we want to execute the VDBE code to implement
+  ** that statement.  Prior action routines should have already
+  ** constructed VDBE code to do the work of the SQL statement.
+  ** This routine just has to execute the VDBE code.
+  **
+  ** Note that if an error occurred, it might be the case that
+  ** no VDBE code was generated.
+  */
   void sqliteExec(Parse pParse) {
     if (pParse.pVdbe != null) {
       if (pParse.explain != 0) {
@@ -73,92 +77,97 @@ public class build {
     }
   }
 
-  ///*
-  //** Construct a new expression node and return a pointer to it.
-  //*/
-  //Expr *sqliteExpr(int op, Expr *pLeft, Expr *pRight, Token *pToken){
-  //  Expr *pNew;
-  //  pNew = sqliteMalloc( sizeof(Expr) );
-  //  if( pNew==0 ) return 0;
-  //  pNew.op = op;
-  //  pNew.pLeft = pLeft;
-  //  pNew.pRight = pRight;
-  //  if( pToken ){
-  //    pNew.token = *pToken;
-  //  }else{
-  //    pNew.token.z = "";
-  //    pNew.token.n = 0;
-  //  }
-  //  if( pLeft && pRight ){
-  //    sqliteExprSpan(pNew, &pLeft.span, &pRight.span);
-  //  }else{
-  //    pNew.span = pNew.token;
-  //  }
-  //  return pNew;
-  //}
-  //
-  ///*
-  //** Set the Expr.token field of the given expression to span all
-  //** text between the two given tokens.
-  //*/
-  //void sqliteExprSpan(Expr *pExpr, Token *pLeft, Token *pRight){
-  //  pExpr.span.z = pLeft.z;
-  //  pExpr.span.n = pRight.n + (int)pRight.z - (int)pLeft.z;
-  //}
-  //
-  ///*
-  //** Construct a new expression node for a function with multiple
-  //** arguments.
-  //*/
-  //Expr *sqliteExprFunction(ExprList *pList, Token *pToken){
-  //  Expr *pNew;
-  //  pNew = sqliteMalloc( sizeof(Expr) );
-  //  if( pNew==0 ) return 0;
-  //  pNew.op = TK_FUNCTION;
-  //  pNew.pList = pList;
-  //  if( pToken ){
-  //    pNew.token = *pToken;
-  //  }else{
-  //    pNew.token.z = "";
-  //    pNew.token.n = 0;
-  //  }
-  //  return pNew;
-  //}
-  //
-  ///*
-  //** Recursively delete an expression tree.
-  //*/
-  //void sqliteExprDelete(Expr *p){
-  //  if( p==0 ) return;
-  //  if( p.pLeft ) sqliteExprDelete(p.pLeft);
-  //  if( p.pRight ) sqliteExprDelete(p.pRight);
-  //  if( p.pList ) sqliteExprListDelete(p.pList);
-  //  if( p.pSelect ) sqliteSelectDelete(p.pSelect);
-  //  sqliteFree(p);
-  //}
-  //
-  ///*
-  //** Locate the in-memory structure that describes the
-  //** format of a particular database table given the name
-  //** of that table.  Return NULL if not found.
-  //*/
-  //Table *sqliteFindTable(sqlite *db, char *zName){
-  //  Table *pTable;
-  //  int h;
-  //
-  //  h = sqliteHashNoCase(zName, 0) % N_HASH;
-  //  for(pTable=db.apTblHash[h]; pTable; pTable=pTable.pHash){
-  //    if( sqliteStrICmp(pTable.zName, zName)==0 ) return pTable;
-  //  }
-  //  return 0;
-  //}
-  //
+  /*
+   ** Construct a new expression node and return a pointer to it.
+   */
+  public static Expr sqliteExpr(int op, int pLeft, int pRight, int pToken) {
+    Assert.assertTrue(pLeft == 0);
+    Assert.assertTrue(pRight == 0);
+    Assert.assertTrue(pToken == 0);
+    return sqliteExpr(op, null, null, null);
+  }
+
+  public static Expr sqliteExpr(int op, Expr pLeft, Expr pRight, Token pToken) {
+    Expr pNew;
+    pNew = new Expr();//sqliteMalloc( sizeof(Expr) );
+    pNew.op = op;
+    pNew.pLeft = pLeft;
+    pNew.pRight = pRight;
+    if (pToken != null) {
+      pNew.token = pToken;
+    } else {
+      pNew.token.z = new CharPtr("");
+      pNew.token.n = 0;
+    }
+    if (pLeft != null && pRight != null) {
+      sqliteExprSpan(pNew, pLeft.span, pRight.span);
+    } else {
+      pNew.span = pNew.token;
+    }
+    return pNew;
+  }
+
+  /*
+   ** Set the Expr.token field of the given expression to span all
+   ** text between the two given tokens.
+   */
+  public static void sqliteExprSpan(Expr pExpr, Token pLeft, Token pRight) {
+    pExpr.span.z = pLeft.z;
+    pExpr.span.n = pRight.n + pRight.z.pos() - pLeft.z.pos();
+  }
+
+  /*
+   ** Construct a new expression node for a function with multiple
+   ** arguments.
+   */
+  public static Expr sqliteExprFunction(ExprList pList, Token pToken) {
+    Expr pNew;
+    pNew = new Expr();//sqliteMalloc( sizeof(Expr) );
+    pNew.op = TK_FUNCTION;
+    pNew.pList = pList;
+    if (pToken != null) {
+      pNew.token = pToken;
+    } else {
+      pNew.token.z = new CharPtr("");
+      pNew.token.n = 0;
+    }
+    return pNew;
+  }
+
+  /*
+   ** Recursively delete an expression tree.
+   */
+  public static void sqliteExprDelete(Expr p) {
+    if (p == null) return;
+    if (p.pLeft != null) sqliteExprDelete(p.pLeft);
+    if (p.pRight != null) sqliteExprDelete(p.pRight);
+    if (p.pList != null) sqliteExprListDelete(p.pList);
+    if (p.pSelect != null) sqliteSelectDelete(p.pSelect);
+    sqliteFree(p);
+  }
+
+  /*
+   ** Locate the in-memory structure that describes the
+   ** format of a particular database table given the name
+   ** of that table.  Return NULL if not found.
+   */
+  public static Table sqliteFindTable(sqlite db, CharPtr zName) {
+    Table pTable;
+    int h;
+
+    h = sqliteHashNoCase(zName, 0) % N_HASH;
+    for (pTable = db.apTblHash[h]; pTable != null; pTable = pTable.pHash) {
+      if (sqliteStrICmp(pTable.zName, zName) == 0) return pTable;
+    }
+    return null;
+  }
+
   ///*
   //** Locate the in-memory structure that describes the
   //** format of a particular index given the name
   //** of that index.  Return NULL if not found.
   //*/
-  //Index *sqliteFindIndex(sqlite *db, char *zName){
+  //Index *sqliteFindIndex(sqlite *db, CharPtr zName){
   //  Index *p;
   //  int h;
   //
@@ -225,8 +234,8 @@ public class build {
   //** Space to hold the name is obtained from sqliteMalloc() and must
   //** be freed by the calling function.
   //*/
-  //char *sqliteTableNameFromToken(Token *pName){
-  //  char *zName = sqliteStrNDup(pName.z, pName.n);
+  //CharPtr sqliteTableNameFromToken(Token *pName){
+  //  CharPtr zName = sqliteStrNDup(pName.z, pName.n);
   //  sqliteDequote(zName);
   //  return zName;
   //}
@@ -238,7 +247,7 @@ public class build {
   //*/
   //void sqliteStartTable(Parse *pParse, Token *pStart, Token *pName){
   //  Table *pTable;
-  //  char *zName;
+  //  CharPtr zName;
   //
   //  pParse.sFirstToken = *pStart;
   //  zName = sqliteTableNameFromToken(pName);
@@ -277,7 +286,7 @@ public class build {
   //*/
   //void sqliteAddColumn(Parse *pParse, Token *pName){
   //  Table *p;
-  //  char **pz;
+  //  CharPtr *pz;
   //  if( (p = pParse.pNewTable)==0 ) return;
   //  if( (p.nCol & 0x7)==0 ){
   //    p.aCol = sqliteRealloc( p.aCol, (p.nCol+8)*sizeof(p.aCol[0]));
@@ -300,7 +309,7 @@ public class build {
   //void sqliteAddDefaultValue(Parse *pParse, Token *pVal, int minusFlag){
   //  Table *p;
   //  int i;
-  //  char **pz;
+  //  CharPtr *pz;
   //  if( (p = pParse.pNewTable)==0 ) return;
   //  i = p.nCol-1;
   //  pz = &p.aCol[i].zDflt;
@@ -387,7 +396,7 @@ public class build {
   //** an error for the parser to find and return NULL.
   //*/
   //Table *sqliteTableFromToken(Parse *pParse, Token *pTok){
-  //  char *zName = sqliteTableNameFromToken(pTok);
+  //  CharPtr zName = sqliteTableNameFromToken(pTok);
   //  Table *pTab = sqliteFindTable(pParse.db, zName);
   //  sqliteFree(zName);
   //  if( pTab==0 ){
@@ -488,7 +497,7 @@ public class build {
   //){
   //  Table *pTab;     /* Table to be indexed */
   //  Index *pIndex;   /* The index to be created */
-  //  char *zName = 0;
+  //  CharPtr zName = 0;
   //  int i, j, h;
   //  Token nullId;    /* Fake token for an empty ID list */
   //
@@ -659,7 +668,7 @@ public class build {
   //*/
   //void sqliteDropIndex(Parse *pParse, Token *pName){
   //  Index *pIndex;
-  //  char *zName;
+  //  CharPtr zName;
   //  Vdbe *v;
   //
   //  zName = sqliteTableNameFromToken(pName);
@@ -711,49 +720,44 @@ public class build {
   //    sqliteDeleteIndex(pParse.db, pIndex);
   //  }
   //}
-  //
-  ///*
-  //** Add a new element to the end of an expression list.  If pList is
-  //** initially NULL, then create a new expression list.
-  //*/
-  //ExprList *sqliteExprListAppend(ExprList *pList, Expr *pExpr, Token *pName){
-  //  int i;
-  //  if( pList==0 ){
-  //    pList = sqliteMalloc( sizeof(ExprList) );
-  //  }
-  //  if( pList==0 ) return 0;
-  //  if( (pList.nExpr & 7)==0 ){
-  //    int n = pList.nExpr + 8;
-  //    pList.a = sqliteRealloc(pList.a, n*sizeof(pList.a[0]));
-  //    if( pList.a==0 ){
-  //      pList.nExpr = 0;
-  //      return pList;
-  //    }
-  //  }
-  //  i = pList.nExpr++;
-  //  pList.a[i].pExpr = pExpr;
-  //  pList.a[i].zName = 0;
-  //  if( pName ){
-  //    sqliteSetNString(&pList.a[i].zName, pName.z, pName.n, 0);
-  //    sqliteDequote(pList.a[i].zName);
-  //  }
-  //  return pList;
-  //}
-  //
-  ///*
-  //** Delete an entire expression list.
-  //*/
-  //void sqliteExprListDelete(ExprList *pList){
-  //  int i;
-  //  if( pList==0 ) return;
-  //  for(i=0; i<pList.nExpr; i++){
-  //    sqliteExprDelete(pList.a[i].pExpr);
-  //    sqliteFree(pList.a[i].zName);
-  //  }
-  //  sqliteFree(pList.a);
-  //  sqliteFree(pList);
-  //}
-  //
+
+  /*
+   ** Add a new element to the end of an expression list.  If pList is
+   ** initially NULL, then create a new expression list.
+   */
+  public static ExprList sqliteExprListAppend(ExprList pList, Expr pExpr, Token pName) {
+    int i;
+    if (pList == null) {
+      pList = new ExprList();//sqliteMalloc( sizeof(ExprList) );
+    }
+    if ((pList.nExpr & 7) == 0) {
+      int n = pList.nExpr + 8;
+      pList.a = sqliteRealloc(pList.a, n);//*sizeof(pList.a[0]));
+    }
+    i = pList.nExpr++;
+    pList.a[i].pExpr = pExpr;
+    pList.a[i].zName = null;
+    if (pName != null) {
+      sqliteSetNString(pList.a[i].zName, pName.z, pName.n, 0);
+      sqliteDequote(pList.a[i].zName);
+    }
+    return pList;
+  }
+
+  /*
+   ** Delete an entire expression list.
+   */
+  public static void sqliteExprListDelete(ExprList pList) {
+    int i;
+    if (pList == null) return;
+    for (i = 0; i < pList.nExpr; i++) {
+      sqliteExprDelete(pList.a[i].pExpr);
+      sqliteFree(pList.a[i].zName);
+    }
+    sqliteFree(pList.a);
+    sqliteFree(pList);
+  }
+
   ///*
   //** Append a new element to the given IdList.  Create a new IdList if
   //** need be.
@@ -789,22 +793,22 @@ public class build {
   //    sqliteDequote(pList.a[i].zAlias);
   //  }
   //}
-  //
-  ///*
-  //** Delete an entire IdList
-  //*/
-  //void sqliteIdListDelete(IdList *pList){
-  //  int i;
-  //  if( pList==0 ) return;
-  //  for(i=0; i<pList.nId; i++){
-  //    sqliteFree(pList.a[i].zName);
-  //    sqliteFree(pList.a[i].zAlias);
-  //  }
-  //  sqliteFree(pList.a);
-  //  sqliteFree(pList);
-  //}
-  //
-  //
+
+  /*
+   ** Delete an entire IdList
+   */
+  public static void sqliteIdListDelete(IdList pList) {
+    int i;
+    if (pList == null) return;
+    for (i = 0; i < pList.nId; i++) {
+      sqliteFree(pList.a[i].zName);
+      sqliteFree(pList.a[i].zAlias);
+    }
+    sqliteFree(pList.a);
+    sqliteFree(pList);
+  }
+
+
   ///*
   //** The COPY command is for compatibility with PostgreSQL and specificially
   //** for the ability to read the output of pg_dump.  The format is as
@@ -823,7 +827,7 @@ public class build {
   //  Token *pDelimiter    /* Use this as the field delimiter */
   //){
   //  Table *pTab;
-  //  char *zTab;
+  //  CharPtr zTab;
   //  int i, j;
   //  Vdbe *v;
   //  int addr, end;
@@ -894,7 +898,7 @@ public class build {
   //** in PostgreSQL.
   //*/
   //void sqliteVacuum(Parse *pParse, Token *pTableName){
-  //  char *zName;
+  //  CharPtr zName;
   //  Vdbe *v;
   //
   //  if( pTableName ){
