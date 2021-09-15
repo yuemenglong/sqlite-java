@@ -227,19 +227,19 @@ public class build {
   //  sqliteFree(pTable.aCol);
   //  sqliteFree(pTable);
   //}
-  //
-  ///*
-  //** Construct the name of a user table or index from a token.
-  //**
-  //** Space to hold the name is obtained from sqliteMalloc() and must
-  //** be freed by the calling function.
-  //*/
-  //CharPtr sqliteTableNameFromToken(Token *pName){
-  //  CharPtr zName = sqliteStrNDup(pName.z, pName.n);
-  //  sqliteDequote(zName);
-  //  return zName;
-  //}
-  //
+
+  /*
+   ** Construct the name of a user table or index from a token.
+   **
+   ** Space to hold the name is obtained from sqliteMalloc() and must
+   ** be freed by the calling function.
+   */
+  public static CharPtr sqliteTableNameFromToken(Token pName) {
+    CharPtr zName = sqliteStrNDup(pName.z, pName.n);
+    sqliteDequote(zName);
+    return zName;
+  }
+
   ///*
   //** Begin constructing a new table representation in memory.  This is
   //** the first of several action routines that get called in response
