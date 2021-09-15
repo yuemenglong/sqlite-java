@@ -1,6 +1,7 @@
 package io.github.yuemenglong.sqlite.core;
 
 import io.github.yuemenglong.sqlite.common.Addr;
+import io.github.yuemenglong.sqlite.common.CharPtr;
 
 public class sqliteint {
   public static final int N_HASH = 51;
@@ -184,14 +185,14 @@ public class sqliteint {
   //*/
 
   public interface sqlite_callback {
-    int call(Object obj, int n, String[] sa, String[] sb);
+    int call(Object obj, int n, CharPtr[] sa, CharPtr[] sb);
   }
 
   public static class Parse {
     sqlite db;          /* The main database public static class ure */
     sqlite_callback xCallback;  /* The callback function */
     Object pArg;          /* First argument to the callback function */
-    String zErrMsg;       /* An error message */
+    CharPtr zErrMsg;       /* An error message */
     Token sErrToken;     /* The token at which the error occurred */
     Token sFirstToken;   /* The first token parsed */
     Token sLastToken;    /* The last token parsed */

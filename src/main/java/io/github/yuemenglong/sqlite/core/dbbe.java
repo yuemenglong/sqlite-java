@@ -162,7 +162,7 @@ public class dbbe {
   /*
    ** Completely shutdown the given database.  Close all files.  Free all memory.
    */
-  void sqliteDbbeClose(Dbbe pBe) {
+  public static void sqliteDbbeClose(Dbbe pBe) {
     BeFile pFile;
     BeFile pNext;
     int i;
@@ -218,7 +218,7 @@ public class dbbe {
    ** Very random names are chosen so that the chance of a
    ** collision with an existing filename is very very small.
    */
-  static void randomName(rc4 pRc4, CharPtr zBuf, CharPtr zPrefix) {
+  public static void randomName(rc4 pRc4, CharPtr zBuf, CharPtr zPrefix) {
     int i, j;
     char[] zRandomChars = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 //    strcpy(zBuf, zPrefix);
@@ -256,7 +256,7 @@ public class dbbe {
    ** a cursor to that temporary file is opened.  The temporary file
    ** will be deleted from the disk when it is closed.
    */
-  int sqliteDbbeOpenCursor(
+  public static int sqliteDbbeOpenCursor(
           Dbbe pBe,              /* The database the table belongs to */
           CharPtr zTable,     /* The SQL name of the file to be opened */
           int writeable,          /* True to open for writing */
@@ -358,7 +358,7 @@ public class dbbe {
    ** Drop a table from the database.  The file on the disk that corresponds
    ** to this table is deleted.
    */
-  void sqliteDbbeDropTable(Dbbe pBe, CharPtr zTable) {
+  public static void sqliteDbbeDropTable(Dbbe pBe, CharPtr zTable) {
     CharPtr zFile;            /* Name of the table file */
 
     zFile = sqliteFileOfTable(pBe, zTable);
@@ -369,7 +369,7 @@ public class dbbe {
   /*
    ** Reorganize a table to reduce search times and disk usage.
    */
-  int sqliteDbbeReorganizeTable(Dbbe pBe, CharPtr zTable) {
+  public static int sqliteDbbeReorganizeTable(Dbbe pBe, CharPtr zTable) {
     AtomicReference<DbbeCursor> pCrsr = new AtomicReference<>();
     int rc;
 
@@ -396,7 +396,7 @@ public class dbbe {
    ** closed.  This routine decrements the BeFile.nref field of the
    ** underlying file and closes the file when nref reaches 0.
    */
-  void sqliteDbbeCloseCursor(DbbeCursor pCursr) {
+  public static void sqliteDbbeCloseCursor(DbbeCursor pCursr) {
     BeFile pFile;
     Dbbe pBe;
     if (pCursr == null) return;
@@ -436,7 +436,7 @@ public class dbbe {
   /*
    ** Clear the given datum
    */
-  static void datumClear(datum p) {
+  public static void datumClear(datum p) {
 //    if (p.dptr!=null) free(p.dptr);
     p.dptr = null;
     p.dsize = 0;
@@ -447,7 +447,7 @@ public class dbbe {
    ** Fetch a single record from an open cursor.  Return 1 on success
    ** and 0 on failure.
    */
-  int sqliteDbbeFetch(DbbeCursor pCursr, int nKey, CharPtr pKey) {
+  public static int sqliteDbbeFetch(DbbeCursor pCursr, int nKey, CharPtr pKey) {
     datum key = new datum();
     key.dsize = nKey;
     key.dptr = pKey;
@@ -463,7 +463,7 @@ public class dbbe {
    ** Return 1 if the given key is already in the table.  Return 0
    ** if it is not.
    */
-  int sqliteDbbeTest(DbbeCursor pCursr, int nKey, CharPtr pKey) {
+  public static int sqliteDbbeTest(DbbeCursor pCursr, int nKey, CharPtr pKey) {
     datum key = new datum();
     int result = 0;
     key.dsize = nKey;
@@ -478,7 +478,7 @@ public class dbbe {
    ** Copy bytes from the current key or data into a buffer supplied by
    ** the calling function.  Return the number of bytes copied.
    */
-  int sqliteDbbeCopyKey(DbbeCursor pCursr, int offset, int size, CharPtr zBuf) {
+  public static int sqliteDbbeCopyKey(DbbeCursor pCursr, int offset, int size, CharPtr zBuf) {
     int n;
     if (offset >= pCursr.key.dsize) return 0;
     if (offset + size > pCursr.key.dsize) {
@@ -491,7 +491,7 @@ public class dbbe {
     return n;
   }
 
-  int sqliteDbbeCopyData(DbbeCursor pCursr, int offset, int size, CharPtr zBuf) {
+  public static int sqliteDbbeCopyData(DbbeCursor pCursr, int offset, int size, CharPtr zBuf) {
     int n;
     if (pCursr.readPending != 0 && pCursr.pFile != null && pCursr.pFile.dbf != null) {
       pCursr.data = pCursr.pFile.dbf.gdbm_fetch(pCursr.key);
@@ -512,12 +512,12 @@ public class dbbe {
    ** Return a pointer to bytes from the key or data.  The data returned
    ** is ephemeral.
    */
-  CharPtr sqliteDbbeReadKey(DbbeCursor pCursr, int offset) {
+  public static CharPtr sqliteDbbeReadKey(DbbeCursor pCursr, int offset) {
     if (offset < 0 || offset >= pCursr.key.dsize) return new CharPtr("");
     return pCursr.key.dptr.ptr(offset);
   }
 
-  CharPtr sqliteDbbeReadData(DbbeCursor pCursr, int offset) {
+  public static CharPtr sqliteDbbeReadData(DbbeCursor pCursr, int offset) {
     if (pCursr.readPending != 0 && pCursr.pFile != null && pCursr.pFile.dbf != null) {
       pCursr.data = pCursr.pFile.dbf.gdbm_fetch(pCursr.key);
       pCursr.readPending = 0;
@@ -529,11 +529,11 @@ public class dbbe {
   /*
    ** Return the total number of bytes in either data or key.
    */
-  int sqliteDbbeKeyLength(DbbeCursor pCursr) {
+  public static int sqliteDbbeKeyLength(DbbeCursor pCursr) {
     return pCursr.key.dsize;
   }
 
-  int sqliteDbbeDataLength(DbbeCursor pCursr) {
+  public static int sqliteDbbeDataLength(DbbeCursor pCursr) {
     if (pCursr.readPending != 0 && pCursr.pFile != null && pCursr.pFile.dbf != null) {
       pCursr.data = pCursr.pFile.dbf.gdbm_fetch(pCursr.key);
       pCursr.readPending = 0;
@@ -545,7 +545,7 @@ public class dbbe {
    ** Make is so that the next call to sqliteNextKey() finds the first
    ** key of the table.
    */
-  int sqliteDbbeRewind(DbbeCursor pCursr) {
+  public static int sqliteDbbeRewind(DbbeCursor pCursr) {
     pCursr.needRewind = 1;
     return SQLITE_OK;
   }
@@ -554,7 +554,7 @@ public class dbbe {
    ** Read the next key from the table.  Return 1 on success.  Return
    ** 0 if there are no more keys.
    */
-  int sqliteDbbeNextKey(DbbeCursor pCursr) {
+  public static int sqliteDbbeNextKey(DbbeCursor pCursr) {
     datum nextkey;
     int rc;
     if (pCursr == null) {
@@ -587,7 +587,7 @@ public class dbbe {
   /*
    ** Get a new integer key.
    */
-  int sqliteDbbeNew(DbbeCursor pCursr) {
+  public static int sqliteDbbeNew(DbbeCursor pCursr) {
     int iKey = 0;
     datum key = new datum();
     int go = 1;
@@ -614,7 +614,7 @@ public class dbbe {
    ** Write an entry into the table.  Overwrite any prior entry with the
    ** same key.
    */
-  int sqliteDbbePut(DbbeCursor pCursr, int nKey, CharPtr pKey, int nData, CharPtr pData) {
+  public static int sqliteDbbePut(DbbeCursor pCursr, int nKey, CharPtr pKey, int nData, CharPtr pData) {
     datum data = new datum();
     datum key = new datum();
     int rc;
@@ -633,7 +633,7 @@ public class dbbe {
   /*
    ** Remove an entry from a table, if the entry exists.
    */
-  int sqliteDbbeDelete(DbbeCursor pCursr, int nKey, CharPtr pKey) {
+  public static int sqliteDbbeDelete(DbbeCursor pCursr, int nKey, CharPtr pKey) {
     datum key = new datum();
     int rc;
     datumClear(pCursr.key);
@@ -653,7 +653,7 @@ public class dbbe {
    ** and then immediately unlinking the file.  That works great
    ** under Unix, but fails when we try to port to Windows.
    */
-  int sqliteDbbeOpenTempFile(Dbbe pBe, Addr<FILE> ppFile) {
+  public static int sqliteDbbeOpenTempFile(Dbbe pBe, Addr<FILE> ppFile) {
     CharPtr zFile;         /* Full name of the temporary file */
     CharPtr zBuf = new CharPtr(50);       /* Base name of the temporary file */
     int i;               /* Loop counter */
@@ -694,7 +694,7 @@ public class dbbe {
   /*
    ** Close a temporary file opened using sqliteDbbeOpenTempFile()
    */
-  void sqliteDbbeCloseTempFile(Dbbe pBe, FILE f) {
+  public static void sqliteDbbeCloseTempFile(Dbbe pBe, FILE f) {
     int i;
     for (i = 0; i < pBe.nTemp; i++) {
       if (pBe.apTemp[i] == f) {

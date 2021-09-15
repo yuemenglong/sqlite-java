@@ -7,9 +7,15 @@ import io.github.yuemenglong.sqlite.common.Ptr;
 import io.github.yuemenglong.sqlite.core.sqliteint.*;
 
 import static io.github.yuemenglong.sqlite.common.Util.isspace;
+import static io.github.yuemenglong.sqlite.core.dbbe.*;
+import static io.github.yuemenglong.sqlite.core.sqlite.SQLITE_ABORT;
+import static io.github.yuemenglong.sqlite.core.sqlite.SQLITE_OK;
 import static io.github.yuemenglong.sqlite.core.util.*;
 
 import io.github.yuemenglong.sqlite.core.dbbe.*;
+
+import java.util.Arrays;
+import java.util.function.IntFunction;
 
 
 @SuppressWarnings("unused")
@@ -304,7 +310,7 @@ public class vdbe {
     CharPtr[] zStack;      /* Text or binary values of the stack */
     CharPtr[] azColName;   /* Becomes the 4th parameter to callbacks */
     int nCursor;        /* Number of slots in aCsr[] */
-    Cursor aCsr;       /* On element of this array for each open cursor */
+    Cursor[] aCsr;       /* On element of this array for each open cursor */
     int nList;          /* Number of slots in apList[] */
     FILE[] apList;      /* An open file for each list */
     int nSort;          /* Number of slots in apSort[] */
@@ -315,10 +321,10 @@ public class vdbe {
     CharPtr zLine;        /* A single line from the input file */
     int nLineAlloc;     /* Number of spaces allocated for zLine */
     int nMem;           /* Number of memory locations currently allocated */
-    Mem aMem;          /* The memory locations */
+    Mem[] aMem;          /* The memory locations */
     Agg agg;            /* Aggregate information */
     int nSet;           /* Number of sets allocated */
-    Set aSet;          /* An array of sets */
+    Set[] aSet;          /* An array of sets */
     int nFetch;         /* Number of OP_Fetch instructions executed */
   }
 
@@ -802,4 +808,226 @@ public class vdbe {
     return 0;
   }
 
+
+  /*
+   ** Clean up the VM after execution.
+   **
+   ** This routine will automatically close any cursors, list, and/or
+   ** sorters that were left open.
+   */
+  static void Cleanup(Vdbe p) {
+    int i;
+    PopStack(p, p.tos + 1);
+//    sqliteFree(p.azColName);
+    p.azColName = null;
+    for (i = 0; i < p.nCursor; i++) {
+      if (p.aCsr[i].pCursor != null) {
+        sqliteDbbeCloseCursor(p.aCsr[i].pCursor);
+        p.aCsr[i].pCursor = null;
+      }
+    }
+//    sqliteFree(p.aCsr);
+    p.aCsr = null;
+    p.nCursor = 0;
+    for (i = 0; i < p.nMem; i++) {
+      if ((p.aMem[i].s.flags & STK_Dyn) != 0) {
+//        sqliteFree(p.aMem[i].z);
+      }
+    }
+//    sqliteFree(p.aMem);
+    p.aMem = null;
+    p.nMem = 0;
+    for (i = 0; i < p.nList; i++) {
+      if (p.apList[i] != null) {
+        sqliteDbbeCloseTempFile(p.pBe, p.apList[i]);
+        p.apList[i] = null;
+      }
+    }
+//    sqliteFree(p.apList);
+    p.apList = null;
+    p.nList = 0;
+    for (i = 0; i < p.nSort; i++) {
+      Sorter pSorter;
+      while ((pSorter = p.apSort[i]) != null) {
+        p.apSort[i] = pSorter.pNext;
+//        sqliteFree(pSorter.zKey);
+//        sqliteFree(pSorter.pData);
+//        sqliteFree(pSorter);
+      }
+    }
+//    sqliteFree(p.apSort);
+    p.apSort = null;
+    p.nSort = 0;
+    if (p.pFile != null) {
+      if (p.pFile.isStdin()) p.pFile.close();
+//      if (p.pFile != stdin) fclose(p.pFile);
+      p.pFile = null;
+    }
+    if (p.azField != null) {
+//      sqliteFree(p.azField);
+      p.azField = null;
+    }
+    p.nField = 0;
+    if (p.zLine == null) {
+//      sqliteFree(p.zLine);
+      p.zLine = null;
+    }
+    p.nLineAlloc = 0;
+    AggReset(p.agg);
+    for (i = 0; i < p.nSet; i++) {
+      SetClear(p.aSet[i]);
+    }
+//    sqliteFree(p.aSet);
+    p.aSet = null;
+    p.nSet = 0;
+  }
+
+  /*
+   ** Delete an entire VDBE.
+   */
+  void sqliteVdbeDelete(Vdbe p) {
+    int i;
+    if (p == null) return;
+    Cleanup(p);
+    if (p.nOpAlloc == 0) {
+      p.aOp = null;
+      p.nOp = 0;
+    }
+    for (i = 0; i < p.nOp; i++) {
+//      sqliteFree(p.aOp[i].p3);
+    }
+//    sqliteFree(p.aOp);
+//    sqliteFree(p.aLabel);
+//    sqliteFree(p.aStack);
+//    sqliteFree(p.zStack);
+//    sqliteFree(p);
+  }
+
+  /*
+   ** A translation from opcode numbers to opcode names.  Used for testing
+   ** and debugging only.
+   **
+   ** If any of the numeric OP_ values for opcodes defined in sqliteVdbe.h
+   ** change, be sure to change this array to match.  You can use the
+   ** "opNames.awk" awk script which is part of the source tree to regenerate
+   ** this array, then copy and paste it into this file, if you want.
+   */
+  static String[] zOpName = {null,
+          "Open", "Close", "Fetch", "Fcnt",
+          "New", "Put", "Distinct", "Found",
+          "NotFound", "Delete", "Field", "KeyAsData",
+          "Key", "Rewind", "Next", "Destroy",
+          "Reorganize", "ResetIdx", "NextIdx", "PutIdx",
+          "DeleteIdx", "MemLoad", "MemStore", "ListOpen",
+          "ListWrite", "ListRewind", "ListRead", "ListClose",
+          "SortOpen", "SortPut", "SortMakeRec", "SortMakeKey",
+          "Sort", "SortNext", "SortKey", "SortCallback",
+          "SortClose", "FileOpen", "FileRead", "FileField",
+          "FileClose", "AggReset", "AggFocus", "AggIncr",
+          "AggNext", "AggSet", "AggGet", "SetInsert",
+          "SetFound", "SetNotFound", "SetClear", "MakeRecord",
+          "MakeKey", "Goto", "If", "Halt",
+          "ColumnCount", "ColumnName", "Callback", "Integer",
+          "String", "Null", "Pop", "Dup",
+          "Pull", "Add", "AddImm", "Subtract",
+          "Multiply", "Divide", "Min", "Max",
+          "Like", "Glob", "Eq", "Ne",
+          "Lt", "Le", "Gt", "Ge",
+          "IsNull", "NotNull", "Negative", "And",
+          "Or", "Not", "Concat", "Noop",
+  };
+
+  /*
+   ** Given the name of an opcode, return its number.  Return 0 if
+   ** there is no match.
+   **
+   ** This routine is used for testing and debugging.
+   */
+  int sqliteVdbeOpcode(CharPtr zName) {
+    int i;
+    for (i = 1; i <= OP_MAX; i++) {
+      if (sqliteStrICmp(zName, new CharPtr(zOpName[i])) == 0) return i;
+    }
+    return 0;
+  }
+
+  /*
+   ** Give a listing of the program in the virtual machine.
+   **
+   ** The interface is the same as sqliteVdbeExec().  But instead of
+   ** running the code, it invokes the callback once for each instruction.
+   ** This feature is used to implement "EXPLAIN".
+   */
+  int sqliteVdbeList(
+          Vdbe p,                   /* The VDBE */
+          sqlite_callback xCallback, /* The callback */
+          Object pArg,                /* 1st argument to callback */
+          CharPtr pzErrMsg            /* Error msg written here */
+  ) {
+    int i, rc;
+    CharPtr[] azValue = new CharPtr[6];
+    CharPtr zAddr = new CharPtr(20);
+    CharPtr zP1 = new CharPtr(20);
+    CharPtr zP2 = new CharPtr(20);
+    CharPtr[] azColumnNames = Arrays.stream(new String[]{
+            "addr", "opcode", "p1", "p2", "p3", null
+    }).map(x -> {
+      if (x == null) {
+        return null;
+      } else {
+        return new CharPtr(x);
+      }
+    }).toArray(value -> new CharPtr[0]);
+
+    if (xCallback == null) return 0;
+    azValue[0] = zAddr;
+    azValue[2] = zP1;
+    azValue[3] = zP2;
+    azValue[5] = null;
+    rc = SQLITE_OK;
+    /* if( pzErrMsg ){ *pzErrMsg = 0; } */
+    for (i = 0; rc == SQLITE_OK && i < p.nOp; i++) {
+      zAddr.sprintf("%d", i);
+      zP1.sprintf("%d", p.aOp[i].p1);
+      zP2.sprintf("%d", p.aOp[i].p2);
+      azValue[4] = p.aOp[i].p3;
+      azValue[1] = new CharPtr(zOpName[p.aOp[i].opcode]);
+      if (xCallback.call(pArg, 5, azValue, azColumnNames) != 0) {
+        rc = SQLITE_ABORT;
+      }
+    }
+    return rc;
+  }
+
+  /*
+   ** The parameters are pointers to the head of two sorted lists
+   ** of Sorter structures.  Merge these two lists together and return
+   ** a single sorted list.  This routine forms the core of the merge-sort
+   ** algorithm.
+   **
+   ** In the case of a tie, left sorts in front of right.
+   */
+  static Sorter Merge(Sorter pLeft, Sorter pRight) {
+    Sorter sHead = new Sorter();
+    Sorter pTail;
+    pTail = sHead;
+    pTail.pNext = null;
+    while (pLeft != null && pRight != null) {
+      int c = sqliteSortCompare(pLeft.zKey, pRight.zKey);
+      if (c <= 0) {
+        pTail.pNext = pLeft;
+        pLeft = pLeft.pNext;
+      } else {
+        pTail.pNext = pRight;
+        pRight = pRight.pNext;
+      }
+      pTail = pTail.pNext;
+    }
+    if (pLeft != null) {
+      pTail.pNext = pLeft;
+    } else if (pRight != null) {
+      pTail.pNext = pRight;
+    }
+    return sHead.pNext;
+  }
 }

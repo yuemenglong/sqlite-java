@@ -40,6 +40,10 @@ public class FILE {
     }
   }
 
+  public boolean isStdin() {
+    return is != null && is == System.in;
+  }
+
 
   public void close() {
     try {
