@@ -13,53 +13,53 @@ import static io.github.yuemenglong.sqlite.core.vdbe.*;
 
 public class build {
   /*
-  ** Copyright (c) 1999, 2000 D. Richard Hipp
-  **
-  ** This program is free software; you can redistribute it and/or
-  ** modify it under the terms of the GNU General Public
-  ** License as published by the Free Software Foundation; either
-  ** version 2 of the License, or (at your option) any later version.
-  **
-  ** This program is distributed in the hope that it will be useful,
-  ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  ** General Public License for more details.
-  **
-  ** You should have received a copy of the GNU General Public
-  ** License along with this library; if not, write to the
-  ** Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-  ** Boston, MA  02111-1307, USA.
-  **
-  ** Author contact information:
-  **   drh@hwaci.com
-  **   http://www.hwaci.com/drh/
-  **
-  *************************************************************************
-  ** This file contains C code routines that are called by the parser
-  ** when syntax rules are reduced.  The routines in this file handle
-  ** the following kinds of syntax:
-  **
-  **     CREATE TABLE
-  **     DROP TABLE
-  **     CREATE INDEX
-  **     DROP INDEX
-  **     creating expressions and ID lists
-  **     COPY
-  **     VACUUM
-  **
-  ** $Id: build.c,v 1.23 2000/08/03 15:09:20 drh Exp $
-  */
+   ** Copyright (c) 1999, 2000 D. Richard Hipp
+   **
+   ** This program is free software; you can redistribute it and/or
+   ** modify it under the terms of the GNU General Public
+   ** License as published by the Free Software Foundation; either
+   ** version 2 of the License, or (at your option) any later version.
+   **
+   ** This program is distributed in the hope that it will be useful,
+   ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+   ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   ** General Public License for more details.
+   **
+   ** You should have received a copy of the GNU General Public
+   ** License along with this library; if not, write to the
+   ** Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   ** Boston, MA  02111-1307, USA.
+   **
+   ** Author contact information:
+   **   drh@hwaci.com
+   **   http://www.hwaci.com/drh/
+   **
+   *************************************************************************
+   ** This file contains C code routines that are called by the parser
+   ** when syntax rules are reduced.  The routines in this file handle
+   ** the following kinds of syntax:
+   **
+   **     CREATE TABLE
+   **     DROP TABLE
+   **     CREATE INDEX
+   **     DROP INDEX
+   **     creating expressions and ID lists
+   **     COPY
+   **     VACUUM
+   **
+   ** $Id: build.c,v 1.23 2000/08/03 15:09:20 drh Exp $
+   */
 
   /*
-  ** This routine is called after a single SQL statement has been
-  ** parsed and we want to execute the VDBE code to implement
-  ** that statement.  Prior action routines should have already
-  ** constructed VDBE code to do the work of the SQL statement.
-  ** This routine just has to execute the VDBE code.
-  **
-  ** Note that if an error occurred, it might be the case that
-  ** no VDBE code was generated.
-  */
+   ** This routine is called after a single SQL statement has been
+   ** parsed and we want to execute the VDBE code to implement
+   ** that statement.  Prior action routines should have already
+   ** constructed VDBE code to do the work of the SQL statement.
+   ** This routine just has to execute the VDBE code.
+   **
+   ** Note that if an error occurred, it might be the case that
+   ** no VDBE code was generated.
+   */
   void sqliteExec(Parse pParse) {
     if (pParse.pVdbe != null) {
       if (pParse.explain != 0) {
@@ -758,31 +758,31 @@ public class build {
     sqliteFree(pList);
   }
 
-  ///*
-  //** Append a new element to the given IdList.  Create a new IdList if
-  //** need be.
-  //*/
-  //IdList *sqliteIdListAppend(IdList *pList, Token *pToken){
-  //  if( pList==0 ){
-  //    pList = sqliteMalloc( sizeof(IdList) );
-  //    if( pList==0 ) return 0;
-  //  }
-  //  if( (pList.nId & 7)==0 ){
-  //    pList.a = sqliteRealloc(pList.a, (pList.nId+8)*sizeof(pList.a[0]) );
-  //    if( pList.a==0 ){
-  //      pList.nId = 0;
-  //      return pList;
-  //    }
-  //  }
-  //  memset(&pList.a[pList.nId], 0, sizeof(pList.a[0]));
-  //  if( pToken ){
-  //    sqliteSetNString(&pList.a[pList.nId].zName, pToken.z, pToken.n, 0);
-  //    sqliteDequote(pList.a[pList.nId].zName);
-  //  }
-  //  pList.nId++;
-  //  return pList;
-  //}
-  //
+  /*
+   ** Append a new element to the given IdList.  Create a new IdList if
+   ** need be.
+   */
+  public static IdList sqliteIdListAppend(IdList pList, Token pToken) {
+    if (pList == null) {
+      pList = new IdList();//sqliteMalloc( sizeof(IdList) );
+      if (pList == null) return null;
+    }
+    if ((pList.nId & 7) == 0) {
+      pList.a = sqliteRealloc(pList.a, (pList.nId + 8));// * sizeof(pList.a[0]));
+      if (pList.a == null) {
+        pList.nId = 0;
+        return pList;
+      }
+    }
+//    memset( & pList.a[pList.nId], 0, sizeof(pList.a[0]));
+    if (pToken != null) {
+      sqliteSetNString(pList.a[pList.nId].zName, pToken.z, pToken.n, 0);
+      sqliteDequote(pList.a[pList.nId].zName);
+    }
+    pList.nId++;
+    return pList;
+  }
+
   ///*
   //** Add an alias to the last identifier on the given identifier list.
   //*/
