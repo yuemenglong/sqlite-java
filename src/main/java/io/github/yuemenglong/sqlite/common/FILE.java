@@ -44,6 +44,25 @@ public class FILE {
     return is != null && is == System.in;
   }
 
+  public boolean isStdout() {
+    return os != null && os == System.out;
+  }
+
+  public boolean isStderr() {
+    return os != null && os == System.err;
+  }
+
+  public static FILE stdin() {
+    return new FILE(null, System.in, null);
+  }
+
+  public static FILE stdout() {
+    return new FILE(null, null, System.out);
+  }
+
+  public static FILE stderr() {
+    return new FILE(null, null, System.err);
+  }
 
   public void close() {
     try {

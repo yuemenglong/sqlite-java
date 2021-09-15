@@ -331,7 +331,7 @@ public class vdbe {
   /*
    ** Create a new virtual database engine.
    */
-  public Vdbe sqliteVdbeCreate(Dbbe pBe) {
+  public static Vdbe sqliteVdbeCreate(Dbbe pBe) {
     Vdbe p = new Vdbe();
     p.pBe = pBe;
     return p;
@@ -340,7 +340,7 @@ public class vdbe {
   /*
    ** Turn tracing on or off
    */
-  void sqliteVdbeTrace(Vdbe p, FILE trace) {
+  public static void sqliteVdbeTrace(Vdbe p, FILE trace) {
     p.trace = trace;
   }
 
@@ -364,7 +364,7 @@ public class vdbe {
    ** prior and subsequent instructions that have the lbl value in
    ** their p2 fields.
    */
-  int sqliteVdbeAddOp(Vdbe p, int op, int p1, int p2, CharPtr p3, int lbl) {
+  public static int sqliteVdbeAddOp(Vdbe p, int op, int p1, int p2, CharPtr p3, int lbl) {
     int i, j;
 
     i = p.nOp;
@@ -400,7 +400,7 @@ public class vdbe {
    ** Resolve label "x" to be the address of the next instruction to
    ** be inserted.
    */
-  void sqliteVdbeResolveLabel(Vdbe p, int x) {
+  public static void sqliteVdbeResolveLabel(Vdbe p, int x) {
     int j;
     if (x < 0 && (-x) <= p.nLabel) {
       p.aLabel[-1 - x] = p.nOp;
@@ -413,7 +413,7 @@ public class vdbe {
   /*
    ** Return the address of the next instruction to be inserted.
    */
-  int sqliteVdbeCurrentAddr(Vdbe p) {
+  public static int sqliteVdbeCurrentAddr(Vdbe p) {
     return p.nOp;
   }
 
@@ -421,7 +421,7 @@ public class vdbe {
    ** Add a whole list of operations to the operation stack.  Return the
    ** address of the first operation added.
    */
-  int sqliteVdbeAddOpList(Vdbe p, int nOp, VdbeOp[] aOp) {
+  public static int sqliteVdbeAddOpList(Vdbe p, int nOp, VdbeOp[] aOp) {
     int addr;
     if (p.nOp + nOp >= p.nOpAlloc) {
       int oldSize = p.nOpAlloc;
@@ -447,7 +447,7 @@ public class vdbe {
    ** static array using sqliteVdbeAddOpList but we want to make a
    ** few minor changes to the program.
    */
-  void sqliteVdbeChangeP3(Vdbe p, int addr, CharPtr zP3, int n) {
+  public static void sqliteVdbeChangeP3(Vdbe p, int addr, CharPtr zP3, int n) {
     if (p != null && addr >= 0 && p.nOp > addr && zP3 != null) {
       sqliteSetNString(p.aOp[addr].p3, zP3, n, 0);
     }
@@ -462,7 +462,7 @@ public class vdbe {
    ** or a double quote character (ASCII 0x22).  Two quotes in a row
    ** resolve to be a single actual quote character within the string.
    */
-  void sqliteVdbeDequoteP3(Vdbe p, int addr) {
+  public static void sqliteVdbeDequoteP3(Vdbe p, int addr) {
     CharPtr z;
     if (addr < 0 || addr >= p.nOp) return;
     z = p.aOp[addr].p3;
@@ -474,7 +474,7 @@ public class vdbe {
    ** strings of whitespace characters into a single space and
    ** delete leading and trailing whitespace.
    */
-  void sqliteVdbeCompressSpace(Vdbe p, int addr) {
+  public static void sqliteVdbeCompressSpace(Vdbe p, int addr) {
     CharPtr z;
     int i, j;
     if (addr < 0 || addr >= p.nOp) return;
@@ -510,7 +510,7 @@ public class vdbe {
    ** always negative and P2 values are suppose to be non-negative.
    ** Hence, a negative P2 value is a label that has yet to be resolved.
    */
-  int sqliteVdbeMakeLabel(Vdbe p) {
+  public static int sqliteVdbeMakeLabel(Vdbe p) {
     int i;
     i = p.nLabel++;
     if (i >= p.nLabelAlloc) {
@@ -524,7 +524,7 @@ public class vdbe {
   /*
    ** Reset an Agg structure.  Delete all its contents.
    */
-  static void AggReset(Agg p) {
+  public static void AggReset(Agg p) {
     int i;
     while (p.pFirst != null) {
       AggElem pElem = p.pFirst;
@@ -543,7 +543,7 @@ public class vdbe {
   /*
    ** Add the given AggElem to the hash array
    */
-  static void AggEnhash(Agg p, AggElem pElem) {
+  public static void AggEnhash(Agg p, AggElem pElem) {
     int h = sqliteHashNoCase(pElem.zKey, 0) % p.nHash;
     pElem.pHash = p.apHash[h];
     p.apHash[h] = pElem;
@@ -552,7 +552,7 @@ public class vdbe {
   /*
    ** Change the size of the hash array to the amount given.
    */
-  static void AggRehash(Agg p, int nHash) {
+  public static void AggRehash(Agg p, int nHash) {
     int size;
     AggElem pElem;
     if (p.nHash == nHash) return;
@@ -570,7 +570,7 @@ public class vdbe {
    **
    ** Return 0 on success and 1 if memory is exhausted.
    */
-  static int AggInsert(Agg p, CharPtr zKey) {
+  public static int AggInsert(Agg p, CharPtr zKey) {
     AggElem pElem;
     int i;
     if (p.nHash <= p.nElem * 2) {
@@ -621,7 +621,7 @@ public class vdbe {
   /*
    ** Erase all information from a Set
    */
-  static void SetClear(Set p) {
+  public static void SetClear(Set p) {
     SetElem pElem, pNext;
     for (pElem = p.pAll; pElem != null; pElem = pNext) {
       pNext = pElem.pNext;
@@ -633,7 +633,7 @@ public class vdbe {
   /*
    ** Insert a new element into the set
    */
-  static void SetInsert(Set p, CharPtr zKey) {
+  public static void SetInsert(Set p, CharPtr zKey) {
     SetElem pElem;
     int h = sqliteHashNoCase(zKey, 0) % (p.apHash.length);
     for (pElem = p.apHash[h]; pElem != null; pElem = pElem.pHash) {
@@ -652,7 +652,7 @@ public class vdbe {
   /*
    ** Return TRUE if an element is in the set.  Return FALSE if not.
    */
-  static int SetTest(Set p, CharPtr zKey) {
+  public static int SetTest(Set p, CharPtr zKey) {
     SetElem pElem;
     int h = sqliteHashNoCase(zKey, 0) % (p.apHash.length);
     for (pElem = p.apHash[h]; pElem != null; pElem = pElem.pHash) {
@@ -726,7 +726,7 @@ public class vdbe {
     }
   }
 
-  static void hardIntegerify(Vdbe p, int i) {
+  public static void hardIntegerify(Vdbe p, int i) {
     if ((p.aStack[i].flags & STK_Real) != 0) {
       p.aStack[i].i = (int) p.aStack[i].r;
       Release(p, i);
@@ -751,7 +751,7 @@ public class vdbe {
     }
   }
 
-  static void hardRealify(Vdbe p, int i) {
+  public static void hardRealify(Vdbe p, int i) {
     if ((p.aStack[i].flags & STK_Str) != 0) {
       p.aStack[i].r = p.zStack[i].atof();
     } else if ((p.aStack[i].flags & STK_Int) != 0) {
@@ -766,7 +766,7 @@ public class vdbe {
    ** Pop the stack N times.  Free any memory associated with the
    ** popped stack elements.
    */
-  static void PopStack(Vdbe p, int N) {
+  public static void PopStack(Vdbe p, int N) {
     if (p.zStack == null) return;
     while (p.tos >= 0 && N-- > 0) {
       int i = p.tos--;
@@ -815,7 +815,7 @@ public class vdbe {
    ** This routine will automatically close any cursors, list, and/or
    ** sorters that were left open.
    */
-  static void Cleanup(Vdbe p) {
+  public static void Cleanup(Vdbe p) {
     int i;
     PopStack(p, p.tos + 1);
 //    sqliteFree(p.azColName);
@@ -885,7 +885,7 @@ public class vdbe {
   /*
    ** Delete an entire VDBE.
    */
-  void sqliteVdbeDelete(Vdbe p) {
+  public static void sqliteVdbeDelete(Vdbe p) {
     int i;
     if (p == null) return;
     Cleanup(p);
@@ -912,7 +912,7 @@ public class vdbe {
    ** "opNames.awk" awk script which is part of the source tree to regenerate
    ** this array, then copy and paste it into this file, if you want.
    */
-  static String[] zOpName = {null,
+  public static String[] zOpName = {null,
           "Open", "Close", "Fetch", "Fcnt",
           "New", "Put", "Distinct", "Found",
           "NotFound", "Delete", "Field", "KeyAsData",
@@ -943,7 +943,7 @@ public class vdbe {
    **
    ** This routine is used for testing and debugging.
    */
-  int sqliteVdbeOpcode(CharPtr zName) {
+  public static int sqliteVdbeOpcode(CharPtr zName) {
     int i;
     for (i = 1; i <= OP_MAX; i++) {
       if (sqliteStrICmp(zName, new CharPtr(zOpName[i])) == 0) return i;
@@ -958,7 +958,7 @@ public class vdbe {
    ** running the code, it invokes the callback once for each instruction.
    ** This feature is used to implement "EXPLAIN".
    */
-  int sqliteVdbeList(
+  public static int sqliteVdbeList(
           Vdbe p,                   /* The VDBE */
           sqlite_callback xCallback, /* The callback */
           Object pArg,                /* 1st argument to callback */
@@ -1007,7 +1007,7 @@ public class vdbe {
    **
    ** In the case of a tie, left sorts in front of right.
    */
-  static Sorter Merge(Sorter pLeft, Sorter pRight) {
+  public static Sorter Merge(Sorter pLeft, Sorter pRight) {
     Sorter sHead = new Sorter();
     Sorter pTail;
     pTail = sHead;
@@ -1029,5 +1029,17 @@ public class vdbe {
       pTail.pNext = pRight;
     }
     return sHead.pNext;
+  }
+
+  public static int sqliteVdbeExec(
+          Vdbe p,                   /* The VDBE */
+          sqlite_callback xCallback, /* The callback */
+          Object pArg,                /* 1st argument to callback */
+          CharPtr pzErrMsg,           /* Error msg written here */
+          Object pBusyArg,            /* 1st argument to the busy callback */
+          xBusyCallback xBusy
+//          int (*xBusy)(void*,const char*,int)  /* Called when a file is busy */
+  ) {
+    return 0;
   }
 }

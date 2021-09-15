@@ -15,7 +15,7 @@ public class sqliteint {
   public static final int FN_Fcnt = 6;
 
   public interface xBusyCallback {
-    int call(Object obj, String s, int n);
+    int call(Object obj, CharPtr s, int n);
   }
 
   public static class sqlite {

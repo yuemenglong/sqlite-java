@@ -1,6 +1,10 @@
 package io.github.yuemenglong.sqlite.core;
 
+import io.github.yuemenglong.sqlite.common.FILE;
 import io.github.yuemenglong.sqlite.core.sqliteint.*;
+
+import static io.github.yuemenglong.sqlite.core.sqliteint.*;
+import static io.github.yuemenglong.sqlite.core.vdbe.*;
 
 public class build {
   ///*
@@ -52,23 +56,22 @@ public class build {
   //** Note that if an error occurred, it might be the case that
   //** no VDBE code was generated.
   //*/
-//  void sqliteExec(Parse pParse) {
-//    if (pParse . pVdbe!=null) {
-//      if (pParse . explain!=0) {
-//        sqliteVdbeList(pParse . pVdbe, pParse . xCallback, pParse . pArg,
-//                & pParse . zErrMsg);
-//      } else {
-//        FILE * trace = (pParse . db . flags & SQLITE_VdbeTrace) != 0 ? stderr : 0;
-//        sqliteVdbeTrace(pParse . pVdbe, trace);
-//        sqliteVdbeExec(pParse . pVdbe, pParse . xCallback, pParse . pArg,
-//                & pParse . zErrMsg, pParse . db . pBusyArg,
-//                pParse . db . xBusyCallback);
-//      }
-//      sqliteVdbeDelete(pParse . pVdbe);
-//      pParse . pVdbe = 0;
-//      pParse . colNamesSet = 0;
-//    }
-//  }
+  void sqliteExec(Parse pParse) {
+    if (pParse.pVdbe != null) {
+      if (pParse.explain != 0) {
+        sqliteVdbeList(pParse.pVdbe, pParse.xCallback, pParse.pArg, pParse.zErrMsg);
+      } else {
+        FILE trace = (pParse.db.flags & SQLITE_VdbeTrace) != 0 ? FILE.stderr() : null;
+        sqliteVdbeTrace(pParse.pVdbe, trace);
+        sqliteVdbeExec(pParse.pVdbe, pParse.xCallback, pParse.pArg,
+                pParse.zErrMsg, pParse.db.pBusyArg,
+                pParse.db.xBusyCallback);
+      }
+      sqliteVdbeDelete(pParse.pVdbe);
+      pParse.pVdbe = null;
+      pParse.colNamesSet = 0;
+    }
+  }
 
   ///*
   //** Construct a new expression node and return a pointer to it.
