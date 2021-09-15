@@ -1,9 +1,6 @@
 package io.github.yuemenglong.sqlite.common;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class FILE {
   public InputStream is;
@@ -14,6 +11,44 @@ public class FILE {
     this.path = path;
     this.is = is;
     this.os = os;
+  }
+
+  public int fread(CharPtr v, int n) {
+    byte[] bs = new byte[n];
+    try {
+      int ret = is.read(bs);
+      v.memcpy(new CharPtr(bs, 0), n);
+      return ret;
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void fwrite(CharPtr v, int n) {
+    try {
+      os.write(v.toByteArray(), 0, n);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public CharPtr fgets(CharPtr s, int n) {
+    try {
+      for (int i = 0; i < n - 1; i++) {
+        int c = is.read();
+        if (c < 0) {
+          return s;
+        } else if (c == '\n') {
+          s.set(i, c);
+          return s;
+        } else {
+          s.set(i, c);
+        }
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+    return s;
   }
 
   public static FILE openRead(String path) {
@@ -64,6 +99,19 @@ public class FILE {
     return new FILE(null, null, System.err);
   }
 
+  public void write(byte[] bytes) {
+    try {
+      os.write(bytes);
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void fprintf(String fmt, Object... args) {
+    String s = String.format(fmt, args);
+    write(s.getBytes());
+  }
+
   public void close() {
     try {
       if (is != null) {
@@ -75,6 +123,14 @@ public class FILE {
       is = null;
       os = null;
     } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void rewind() {
+    try {
+      is.reset();
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }

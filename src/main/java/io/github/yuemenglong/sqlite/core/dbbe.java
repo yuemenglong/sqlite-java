@@ -603,7 +603,8 @@ public class dbbe {
       }
       if (iKey == 0) continue;
 //      key.dptr = ( char*)&iKey;
-      key.dptr = CharPtr.fromInt(iKey);
+      key.dptr = new CharPtr(4);
+      key.dptr.toIntPtr().set(iKey);
       key.dsize = 4;
       go = pCursr.pFile.dbf.gdbm_exists(key);
     }

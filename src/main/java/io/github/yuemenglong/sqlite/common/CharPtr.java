@@ -5,8 +5,8 @@ import java.util.Arrays;
 // 以0结尾的字符串
 public class CharPtr {
 
-  private int pos = 0;
-  private char[] cs;
+  int pos = 0;
+  char[] cs;
 
   public CharPtr(String s) {
     this.cs = Arrays.copyOf(s.toCharArray(), s.length() + 1);
@@ -21,18 +21,26 @@ public class CharPtr {
     this.cs = new char[len];
   }
 
-  private CharPtr(char[] cs, int pos) {
+  CharPtr(byte[] bs, int pos) {
+    this.cs = new char[bs.length];
+    for (int i = 0; i < bs.length; i++) {
+      cs[i] = (char) bs[i];
+    }
+    this.pos = pos;
+  }
+
+  CharPtr(char[] cs, int pos) {
     this.cs = cs;
     this.pos = pos;
   }
 
-  public static CharPtr fromInt(int value) {
-    char[] data = new char[4];
-    data[0] = (char) (value >> 0);
-    data[1] = (char) (value >> 8);
-    data[2] = (char) (value >> 16);
-    data[3] = (char) (value >> 24);
-    return new CharPtr(data, 0);
+  public CharPtr realloc(int n) {
+    this.cs = Arrays.copyOf(cs, n);
+    return this;
+  }
+
+  public IntPtr toIntPtr() {
+    return new IntPtr(cs, pos);
   }
 
   public int pos() {
@@ -101,6 +109,10 @@ public class CharPtr {
 
   public int strcmp(CharPtr x) {
     return toZeroString().compareTo(x.toZeroString());
+  }
+
+  public int strncmp(CharPtr x, int n) {
+    return toZeroString().substring(0, n).compareTo(x.toZeroString().substring(0, n));
   }
 
   public void update(CharPtr x) {
@@ -174,4 +186,24 @@ public class CharPtr {
     CharPtr p = new CharPtr("asdf");
     System.out.println(p);
   }
+
+  public byte[] toByteArray() {
+    byte[] ret = new byte[cs.length - pos];
+    for (int i = 0; i < ret.length; i++) {
+      ret[i] = (byte) (cs[pos + i] & 0xFF);
+    }
+    return ret;
+  }
+
+//  public int readInt() {
+//    return ((int) cs[pos]) << ((int) cs[pos + 1] << 8) + ((int) cs[pos + 2] << 16) + ((int) cs[pos + 3]) << 24;
+//  }
+//
+//  public CharPtr writeInt(int value) {
+//    cs[pos + 0] = (char) ((value >> 0) & 0xFF);
+//    cs[pos + 1] = (char) ((value >> 8) & 0xFF);
+//    cs[pos + 2] = (char) ((value >> 16) & 0xFF);
+//    cs[pos + 3] = (char) ((value >> 24) & 0xFF);
+//    return this;
+//  }
 }

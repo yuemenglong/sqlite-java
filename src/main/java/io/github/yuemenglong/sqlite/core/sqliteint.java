@@ -2,6 +2,7 @@ package io.github.yuemenglong.sqlite.core;
 
 import io.github.yuemenglong.sqlite.common.Addr;
 import io.github.yuemenglong.sqlite.common.CharPtr;
+import io.github.yuemenglong.sqlite.common.Ptr;
 
 public class sqliteint {
   public static final int N_HASH = 51;
@@ -185,7 +186,7 @@ public class sqliteint {
   //*/
 
   public interface sqlite_callback {
-    int call(Object obj, int n, CharPtr[] sa, CharPtr[] sb);
+    int call(Object obj, int n, Ptr<CharPtr> sa, CharPtr[] sb);
   }
 
   public static class Parse {
