@@ -32,7 +32,20 @@ public class vdbe {
     int opcode;         /* What operation to perform */
     int p1;             /* First operand */
     int p2;             /* Second parameter (often the jump destination) */
-    CharPtr p3 = new CharPtr(0);           /* Third parameter */
+    CharPtr p3;         /* Third parameter */
+
+    public VdbeOp(int opcode, int p1, int p2, int p3) {
+      this(opcode, p1, p2, null);
+    }
+
+    public VdbeOp(int opcode, int p1, int p2, String p3) {
+      this.opcode = opcode;
+      this.p1 = p1;
+      this.p2 = p2;
+      if (p3 != null) {
+        this.p3 = new CharPtr(p3);
+      }
+    }
   }
 
   /*
@@ -166,6 +179,13 @@ public class vdbe {
 
   public static class Op extends VdbeOp {
 
+    public Op(int opcode, int p1, int p2, int p3) {
+      super(opcode, p1, p2, p3);
+    }
+
+    public Op(int opcode, int p1, int p2, String p3) {
+      super(opcode, p1, p2, p3);
+    }
   }
 
   ///*
