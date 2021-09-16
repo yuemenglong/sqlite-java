@@ -336,7 +336,7 @@ public class Parse {
             psp.errorcnt++;
             psp.state = RESYNC_AFTER_DECL_ERROR;
           } else {
-            psp.declargslot.set(b[0] == '\"' || b[0] == '(' ? x.substring(1) : x);
+            psp.declargslot.set(b[0] == '\"' || b[0] == '{' ? x.substring(1) : x);
             if (psp.decllnslot != null) psp.decllnslot.set(psp.tokenlineno);
             psp.state = WAITING_FOR_DECL_OR_RULE;
           }

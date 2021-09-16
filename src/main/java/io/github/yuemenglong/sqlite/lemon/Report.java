@@ -542,8 +542,6 @@ public class Report {
     String arg = lemp.arg;
     if (arg == null) {
       arg = "Object ignore";
-    } else {
-      arg = arg.substring(1);
     }
     Replacer.regist("ParseARGDECL", arg.split(" ")[1]);
     Replacer.regist("ParseXARGDECL", arg);

@@ -1,5 +1,7 @@
 %token_prefix TK_
 %extra_argument {Parse pParse}
+%include {
+}
 
 s ::= e(B).{System.out.println("s ::= e");System.out.println(B);}
 e(A) ::= e(B) PLUS t(C).{System.out.println("e ::= e PLUS t");A=(int)(B)+(int)(C);}

@@ -9,12 +9,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.github.yuemenglong.sqlite.core.build.*;
-import static io.github.yuemenglong.sqlite.core.dbbe.sqliteDbbeClose;
-import static io.github.yuemenglong.sqlite.core.dbbe.sqliteDbbeOpen;
+import static io.github.yuemenglong.sqlite.core.dbbe.*;
 import static io.github.yuemenglong.sqlite.core.parse.*;
 import static io.github.yuemenglong.sqlite.core.sqliteH.*;
-import static io.github.yuemenglong.sqlite.core.tokenize.sqliteGetToken;
-import static io.github.yuemenglong.sqlite.core.tokenize.sqliteRunParser;
+import static io.github.yuemenglong.sqlite.core.tokenize.*;
 import static io.github.yuemenglong.sqlite.core.vdbe.*;
 import static io.github.yuemenglong.sqlite.core.sqliteint.*;
 import static io.github.yuemenglong.sqlite.core.util.*;
