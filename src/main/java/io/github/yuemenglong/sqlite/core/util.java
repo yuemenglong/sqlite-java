@@ -23,7 +23,22 @@ public class util {
    ** works just like sqliteFree().
    */
   public static <T> T[] sqliteRealloc(T[] arr, int n) {
-    return Arrays.copyOf(arr, n);
+    try {
+      T[] ret = Arrays.copyOf(arr, n);
+      String cname = ret.getClass().getName();
+      if (cname.startsWith("[L")) {
+        cname = cname.substring(2, cname.length() - 1).replace("/", ".");
+      } else {
+        throw new Exception("Invalid Class Name " + cname);
+      }
+      Class<?> clazz = Class.forName(cname);
+      for (int i = 0; i < ret.length; i++) {
+        ret[i] = (T) clazz.newInstance();
+      }
+      return ret;
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static CharPtr sqliteStrDup(CharPtr z) {
@@ -565,20 +580,5 @@ public class util {
       zCharPtr.cpp();
     }
     return zCharPtr.get() == 0 ? 1 : 0;
-  }
-
-  public static void main(String[] args) {
-    CharPtr a = new CharPtr("ASDF");
-    CharPtr b = new CharPtr("asdf");
-    int ret = sqliteCompare(a, b);
-    System.out.println(ret);
-    System.out.println(a);
-    System.out.println(b);
-//    AtomicReference<CharPtr> p = new AtomicReference<>(new CharPtr("asdf"));
-//    sqliteSetNString(new Addr<>(p::get, p::set),
-//            new CharPtr("1first"), 2,
-//            new CharPtr("2second"), 3,
-//            new CharPtr("3third"), 4);
-//    System.out.println(p.get());
   }
 }

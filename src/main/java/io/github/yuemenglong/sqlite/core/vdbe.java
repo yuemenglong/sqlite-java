@@ -322,7 +322,7 @@ public class vdbe {
     FILE trace;        /* Write an execution trace here, if not NULL */
     int nOp;            /* Number of instructions in the program */
     int nOpAlloc;       /* Number of slots allocated for aOp[] */
-    Op[] aOp;            /* Space to hold the virtual machine's program */
+    Op[] aOp = new Op[]{};            /* Space to hold the virtual machine's program */
     int nLabel;         /* Number of labels used */
     int nLabelAlloc;    /* Number of slots allocated in aLabel[] */
     Integer[] aLabel; /* Space to hold the labels */

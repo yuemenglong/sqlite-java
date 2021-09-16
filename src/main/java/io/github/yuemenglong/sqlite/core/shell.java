@@ -88,7 +88,7 @@ public class shell {
    ** zPrior is a string of prior text retrieved.  If not the empty
    ** string, then issue a continuation prompt.
    */
-  static CharPtr one_input_line(CharPtr zPrior, int isatty) {
+  public static CharPtr one_input_line(CharPtr zPrior, int isatty) {
     String zPrompt;
     CharPtr zResult;
     if (isatty == 0) {
@@ -141,7 +141,7 @@ public class shell {
   /*
    ** Return TRUE if the string supplied is a number of some kinds.
    */
-  static int is_numeric(CharPtr z) {
+  public static int is_numeric(CharPtr z) {
     z = z.dup();
     int seen_digit = 0;
     if (z.get() == '-' || z.get() == '+') {
@@ -357,7 +357,7 @@ public class shell {
    ** the table type ("index" or "table") and SQL to create the table.
    ** This routine should print text sufficient to recreate the table.
    */
-  static int dump_callback(Object pArg, int nArg, Ptr<CharPtr> azArg, Ptr<CharPtr> azCol) {
+  public static int dump_callback(Object pArg, int nArg, Ptr<CharPtr> azArg, Ptr<CharPtr> azCol) {
     callback_data pData = (callback_data) pArg;
     if (nArg != 3) return 1;
     pData.out.fprintf("%s;\n", azArg.get(2));
@@ -402,7 +402,7 @@ public class shell {
    ** If an input line begins with "." then invoke this routine to
    ** process that line.
    */
-  static void do_meta_command(CharPtr zLine, sqlite db, callback_data p) {
+  public static  void do_meta_command(CharPtr zLine, sqlite db, callback_data p) {
     int i = 1;
     int nArg = 0;
     int n, c;
@@ -595,7 +595,7 @@ public class shell {
     }
   }
 
-  int main(int argc, Ptr<CharPtr> argv) {
+  public static int main(int argc, Ptr<CharPtr> argv) {
     sqlite db;
     CharPtr zErrMsg = null;
     CharPtr argv0 = argv.get(0);
