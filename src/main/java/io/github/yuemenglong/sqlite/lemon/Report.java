@@ -358,7 +358,7 @@ public class Report {
         lemp.errorcnt++;
       } else if (rp.rhsalias[i] == null) {
         if (hasDestructor(rp.rhs[i], lemp) != 0) {
-          out.write(String.format("  yy_destructor(%d,&yymsp[%d].minor);\n",
+          out.write(String.format("//        yy_destructor(%d,&yymsp[%d].minor);\n",
                   rp.rhs[i].index, i - rp.nrhs + 1).getBytes());
           lineno.set(lineno.get() + 1);
         } else {
