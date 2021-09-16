@@ -32,8 +32,8 @@
 %token_type {Token}
 %extra_argument {Parse pParse}
 %syntax_error {
-  sqliteSetString(&pParse->zErrMsg,"syntax error",0);
-  pParse->sErrToken = TOKEN;
+  sqliteSetString(&pParse.zErrMsg,"syntax error",0);
+  pParse.sErrToken = TOKEN;
 }
 %name Parser
 %include {
@@ -57,7 +57,7 @@ cmdlist ::= cmdlist SEMI ecmd.
 ecmd ::= explain cmd.  {sqliteExec(pParse);}
 ecmd ::= cmd.          {sqliteExec(pParse);}
 ecmd ::= .
-explain ::= EXPLAIN.    {pParse->explain = 1;}
+explain ::= EXPLAIN.    {pParse.explain = 1;}
 
 // The first form of a command is a CREATE TABLE statement.
 //
@@ -139,8 +139,8 @@ cmd ::= select(X).  {
 
 select(A) ::= oneselect(X).                      {A = X;}
 select(A) ::= select(X) joinop(Y) oneselect(Z).  {
-    Z->op = Y;
-    Z->pPrior = X;
+    Z.op = Y;
+    Z.pPrior = X;
     A = Z;
 }
 %type joinop {int}
@@ -204,11 +204,11 @@ orderby_opt(A) ::= .                          {A = 0;}
 orderby_opt(A) ::= ORDER BY sortlist(X).      {A = X;}
 sortlist(A) ::= sortlist(X) COMMA sortitem(Y) sortorder(Z). {
   A = sqliteExprListAppend(X,Y,0);
-  A->a[A->nExpr-1].sortOrder = Z;   /* 0 for ascending order, 1 for decending */
+  A.a[A.nExpr-1].sortOrder = Z;   /* 0 for ascending order, 1 for decending */
 }
 sortlist(A) ::= sortitem(Y) sortorder(Z). {
   A = sqliteExprListAppend(0,Y,0);
-  A->a[0].sortOrder = Z;
+  A.a[0].sortOrder = Z;
 }
 sortitem(A) ::= expr(X).   {A = X;}
 
@@ -265,13 +265,13 @@ item(A) ::= INTEGER(X).      {A = sqliteExpr(TK_INTEGER, 0, 0, &X);}
 item(A) ::= PLUS INTEGER(X). {A = sqliteExpr(TK_INTEGER, 0, 0, &X);}
 item(A) ::= MINUS INTEGER(X). {
   A = sqliteExpr(TK_UMINUS, 0, 0, 0);
-  A->pLeft = sqliteExpr(TK_INTEGER, 0, 0, &X);
+  A.pLeft = sqliteExpr(TK_INTEGER, 0, 0, &X);
 }
 item(A) ::= FLOAT(X).        {A = sqliteExpr(TK_FLOAT, 0, 0, &X);}
 item(A) ::= PLUS FLOAT(X).   {A = sqliteExpr(TK_FLOAT, 0, 0, &X);}
 item(A) ::= MINUS FLOAT(X).  {
   A = sqliteExpr(TK_UMINUS, 0, 0, 0);
-  A->pLeft = sqliteExpr(TK_FLOAT, 0, 0, &X);
+  A.pLeft = sqliteExpr(TK_FLOAT, 0, 0, &X);
 }
 item(A) ::= STRING(X).       {A = sqliteExpr(TK_STRING, 0, 0, &X);}
 item(A) ::= NULL.            {A = sqliteExpr(TK_NULL, 0, 0, 0);}
@@ -330,13 +330,13 @@ expr(A) ::= expr(X) LIKE expr(Y).  {A = sqliteExpr(TK_LIKE, X, Y, 0);}
 expr(A) ::= expr(X) NOT LIKE expr(Y).  {
   A = sqliteExpr(TK_LIKE, X, Y, 0);
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X->span,&Y->span);
+  sqliteExprSpan(A,&X.span,&Y.span);
 }
 expr(A) ::= expr(X) GLOB expr(Y).  {A = sqliteExpr(TK_GLOB,X,Y,0);}
 expr(A) ::= expr(X) NOT GLOB expr(Y).  {
   A = sqliteExpr(TK_GLOB, X, Y, 0);
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X->span,&Y->span);
+  sqliteExprSpan(A,&X.span,&Y.span);
 }
 expr(A) ::= expr(X) PLUS expr(Y).  {A = sqliteExpr(TK_PLUS, X, Y, 0);}
 expr(A) ::= expr(X) MINUS expr(Y). {A = sqliteExpr(TK_MINUS, X, Y, 0);}
@@ -345,65 +345,65 @@ expr(A) ::= expr(X) SLASH expr(Y). {A = sqliteExpr(TK_SLASH, X, Y, 0);}
 expr(A) ::= expr(X) CONCAT expr(Y). {A = sqliteExpr(TK_CONCAT, X, Y, 0);}
 expr(A) ::= expr(X) ISNULL(E). {
   A = sqliteExpr(TK_ISNULL, X, 0, 0);
-  sqliteExprSpan(A,&X->span,&E);
+  sqliteExprSpan(A,&X.span,&E);
 }
 expr(A) ::= expr(X) NOTNULL(E). {
   A = sqliteExpr(TK_NOTNULL, X, 0, 0);
-  sqliteExprSpan(A,&X->span,&E);
+  sqliteExprSpan(A,&X.span,&E);
 }
 expr(A) ::= NOT(B) expr(X). {
   A = sqliteExpr(TK_NOT, X, 0, 0);
-  sqliteExprSpan(A,&B,&X->span);
+  sqliteExprSpan(A,&B,&X.span);
 }
 expr(A) ::= MINUS(B) expr(X). [UMINUS] {
   A = sqliteExpr(TK_UMINUS, X, 0, 0);
-  sqliteExprSpan(A,&B,&X->span);
+  sqliteExprSpan(A,&B,&X.span);
 }
 expr(A) ::= PLUS(B) expr(X). [UMINUS] {
   A = X;
-  sqliteExprSpan(A,&B,&X->span);
+  sqliteExprSpan(A,&B,&X.span);
 }
 expr(A) ::= LP(B) select(X) RP(E). {
   A = sqliteExpr(TK_SELECT, 0, 0, 0);
-  A->pSelect = X;
+  A.pSelect = X;
   sqliteExprSpan(A,&B,&E);
 }
 expr(A) ::= expr(W) BETWEEN expr(X) AND expr(Y). {
   ExprList pList = sqliteExprListAppend(0, X, 0);
   pList = sqliteExprListAppend(pList, Y, 0);
   A = sqliteExpr(TK_BETWEEN, W, 0, 0);
-  A->pList = pList;
-  sqliteExprSpan(A,&W->span,&Y->span);
+  A.pList = pList;
+  sqliteExprSpan(A,&W.span,&Y.span);
 }
 expr(A) ::= expr(W) NOT BETWEEN expr(X) AND expr(Y). {
   ExprList pList = sqliteExprListAppend(0, X, 0);
   pList = sqliteExprListAppend(pList, Y, 0);
   A = sqliteExpr(TK_BETWEEN, W, 0, 0);
-  A->pList = pList;
+  A.pList = pList;
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&W->span,&Y->span);
+  sqliteExprSpan(A,&W.span,&Y.span);
 }
 expr(A) ::= expr(X) IN LP exprlist(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
-  A->pList = Y;
-  sqliteExprSpan(A,&X->span,&E);
+  A.pList = Y;
+  sqliteExprSpan(A,&X.span,&E);
 }
 expr(A) ::= expr(X) IN LP select(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
-  A->pSelect = Y;
-  sqliteExprSpan(A,&X->span,&E);
+  A.pSelect = Y;
+  sqliteExprSpan(A,&X.span,&E);
 }
 expr(A) ::= expr(X) NOT IN LP exprlist(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
-  A->pList = Y;
+  A.pList = Y;
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X->span,&E);
+  sqliteExprSpan(A,&X.span,&E);
 }
 expr(A) ::= expr(X) NOT IN LP select(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
-  A->pSelect = Y;
+  A.pSelect = Y;
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X->span,&E);
+  sqliteExprSpan(A,&X.span,&E);
 }
 
 
