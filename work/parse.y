@@ -37,6 +37,19 @@
 }
 %name Parser
 %include {
+import static io.github.yuemenglong.sqlite.core.build.*;
+import static io.github.yuemenglong.sqlite.core.dbbe.*;
+import static io.github.yuemenglong.sqlite.core.delete.*;
+import static io.github.yuemenglong.sqlite.core.expr.*;
+import static io.github.yuemenglong.sqlite.core.insert.*;
+import static io.github.yuemenglong.sqlite.core.select.*;
+import static io.github.yuemenglong.sqlite.core.sqliteH.*;
+import static io.github.yuemenglong.sqlite.core.sqliteint.*;
+import static io.github.yuemenglong.sqlite.core.tokenize.*;
+import static io.github.yuemenglong.sqlite.core.update.*;
+import static io.github.yuemenglong.sqlite.core.util.*;
+import static io.github.yuemenglong.sqlite.core.vdbe.*;
+import static io.github.yuemenglong.sqlite.core.where.*;
 }
 
 
