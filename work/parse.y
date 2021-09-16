@@ -35,7 +35,7 @@
   sqliteSetString(pParse.zErrMsg,"syntax error",0);
   pParse.sErrToken = TOKEN;
 }
-%name Parser
+%name Parse
 %include {
 import static io.github.yuemenglong.sqlite.core.build.*;
 import static io.github.yuemenglong.sqlite.core.dbbe.*;
@@ -183,8 +183,8 @@ distinct(A) ::= .           {A = 0;}
 %type sclp {ExprList}
 %destructor sclp {sqliteExprListDelete($$);}
 sclp(A) ::= selcollist(X) COMMA.             {A = X;}
-sclp(A) ::= .                                {A = 0;}
-selcollist(A) ::= STAR.                      {A = 0;}
+sclp(A) ::= .                                {A = null;}
+selcollist(A) ::= STAR.                      {A = null;}
 selcollist(A) ::= sclp(P) expr(X).           {A = sqliteExprListAppend(P,X,0);}
 selcollist(A) ::= sclp(P) expr(X) as id(Y).  {A = sqliteExprListAppend(P,X,Y);}
 as ::= .
@@ -200,7 +200,7 @@ as ::= AS.
 
 from(A) ::= FROM seltablist(X).               {A = X;}
 stl_prefix(A) ::= seltablist(X) COMMA.        {A = X;}
-stl_prefix(A) ::= .                           {A = 0;}
+stl_prefix(A) ::= .                           {A = null;}
 seltablist(A) ::= stl_prefix(X) id(Y).        {A = sqliteIdListAppend(X,Y);}
 seltablist(A) ::= stl_prefix(X) id(Y) as id(Z).
    {A = sqliteIdListAppend(X,Y);
@@ -213,7 +213,7 @@ seltablist(A) ::= stl_prefix(X) id(Y) as id(Z).
 %type sortitem {Expr}
 %destructor sortitem {sqliteExprDelete($$);}
 
-orderby_opt(A) ::= .                          {A = 0;}
+orderby_opt(A) ::= .                          {A = null;}
 orderby_opt(A) ::= ORDER BY sortlist(X).      {A = X;}
 sortlist(A) ::= sortlist(X) COMMA sortitem(Y) sortorder(Z). {
   A = sqliteExprListAppend(X,Y,0);
@@ -233,12 +233,12 @@ sortorder(A) ::= .         {A = 0;}
 
 %type groupby_opt {ExprList}
 %destructor groupby_opt {sqliteExprListDelete($$);}
-groupby_opt(A) ::= .                      {A = 0;}
+groupby_opt(A) ::= .                      {A = null;}
 groupby_opt(A) ::= GROUP BY exprlist(X).  {A = X;}
 
 %type having_opt {Expr}
 %destructor having_opt {sqliteExprDelete($$);}
-having_opt(A) ::= .                {A = 0;}
+having_opt(A) ::= .                {A = null;}
 having_opt(A) ::= HAVING expr(X).  {A = X;}
 
 
@@ -248,7 +248,7 @@ cmd ::= DELETE FROM id(X) where_opt(Y).
 %type where_opt {Expr}
 %destructor where_opt {sqliteExprDelete($$);}
 
-where_opt(A) ::= .                    {A = 0;}
+where_opt(A) ::= .                    {A = null;}
 where_opt(A) ::= WHERE expr(X).       {A = X;}
 
 %type setlist {ExprList}
@@ -294,7 +294,7 @@ item(A) ::= NULL.            {A = sqliteExpr(TK_NULL, 0, 0, 0);}
 %type inscollist {IdList}
 %destructor inscollist {sqliteIdListDelete($$);}
 
-inscollist_opt(A) ::= .                      {A = 0;}
+inscollist_opt(A) ::= .                      {A = null;}
 inscollist_opt(A) ::= LP inscollist(X) RP.   {A = X;}
 inscollist(A) ::= inscollist(X) COMMA id(Y). {A = sqliteIdListAppend(X,Y);}
 inscollist(A) ::= id(Y).                     {A = sqliteIdListAppend(0,Y);}
@@ -430,7 +430,7 @@ exprlist(A) ::= exprlist(X) COMMA expritem(Y).
    {A = sqliteExprListAppend(X,Y,0);}
 exprlist(A) ::= expritem(X).            {A = sqliteExprListAppend(0,X,0);}
 expritem(A) ::= expr(X).                {A = X;}
-expritem(A) ::= .                       {A = 0;}
+expritem(A) ::= .                       {A = null;}
 
 
 cmd ::= CREATE(S) uniqueflag INDEX id(X) ON id(Y) LP idxlist(Z) RP(E).
