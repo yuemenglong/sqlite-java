@@ -32,7 +32,7 @@
 %token_type {Token}
 %extra_argument {Parse pParse}
 %syntax_error {
-  sqliteSetString(&pParse.zErrMsg,"syntax error",0);
+  sqliteSetString(pParse.zErrMsg,"syntax error",0);
   pParse.sErrToken = TOKEN;
 }
 %name Parser
@@ -62,9 +62,9 @@ explain ::= EXPLAIN.    {pParse.explain = 1;}
 // The first form of a command is a CREATE TABLE statement.
 //
 cmd ::= create_table create_table_args.
-create_table ::= CREATE(X) TABLE id(Y).    {sqliteStartTable(pParse,&X,&Y);}
+create_table ::= CREATE(X) TABLE id(Y).    {sqliteStartTable(pParse,X,Y);}
 create_table_args ::= LP columnlist conslist_opt RP(X).
-                                           {sqliteEndTable(pParse,&X);}
+                                           {sqliteEndTable(pParse,X);}
 columnlist ::= columnlist COMMA column.
 columnlist ::= column.
 
@@ -73,7 +73,7 @@ columnlist ::= column.
 // an elaborate typename.  Perhaps someday we'll do something with it.
 //
 column ::= columnid type carglist.
-columnid ::= id(X).                {sqliteAddColumn(pParse,&X);}
+columnid ::= id(X).                {sqliteAddColumn(pParse,X);}
 %type id {Token}
 id(A) ::= ID(X).     {A = X;}
 id(A) ::= STRING(X). {A = X;}
@@ -89,14 +89,14 @@ carglist ::= carglist carg.
 carglist ::= .
 carg ::= CONSTRAINT id ccons.
 carg ::= ccons.
-carg ::= DEFAULT STRING(X).          {sqliteAddDefaultValue(pParse,&X,0);}
-carg ::= DEFAULT ID(X).              {sqliteAddDefaultValue(pParse,&X,0);}
-carg ::= DEFAULT INTEGER(X).         {sqliteAddDefaultValue(pParse,&X,0);}
-carg ::= DEFAULT PLUS INTEGER(X).    {sqliteAddDefaultValue(pParse,&X,0);}
-carg ::= DEFAULT MINUS INTEGER(X).   {sqliteAddDefaultValue(pParse,&X,1);}
-carg ::= DEFAULT FLOAT(X).           {sqliteAddDefaultValue(pParse,&X,0);}
-carg ::= DEFAULT PLUS FLOAT(X).      {sqliteAddDefaultValue(pParse,&X,0);}
-carg ::= DEFAULT MINUS FLOAT(X).     {sqliteAddDefaultValue(pParse,&X,1);}
+carg ::= DEFAULT STRING(X).          {sqliteAddDefaultValue(pParse,X,0);}
+carg ::= DEFAULT ID(X).              {sqliteAddDefaultValue(pParse,X,0);}
+carg ::= DEFAULT INTEGER(X).         {sqliteAddDefaultValue(pParse,X,0);}
+carg ::= DEFAULT PLUS INTEGER(X).    {sqliteAddDefaultValue(pParse,X,0);}
+carg ::= DEFAULT MINUS INTEGER(X).   {sqliteAddDefaultValue(pParse,X,1);}
+carg ::= DEFAULT FLOAT(X).           {sqliteAddDefaultValue(pParse,X,0);}
+carg ::= DEFAULT PLUS FLOAT(X).      {sqliteAddDefaultValue(pParse,X,0);}
+carg ::= DEFAULT MINUS FLOAT(X).     {sqliteAddDefaultValue(pParse,X,1);}
 carg ::= DEFAULT NULL.
 
 // In addition to the type name, we also care about the primary key.
@@ -123,7 +123,7 @@ idlist ::= id.
 
 // The next command format is dropping tables.
 //
-cmd ::= DROP TABLE id(X).          {sqliteDropTable(pParse,&X);}
+cmd ::= DROP TABLE id(X).          {sqliteDropTable(pParse,X);}
 
 // The select statement
 //
@@ -173,7 +173,7 @@ sclp(A) ::= selcollist(X) COMMA.             {A = X;}
 sclp(A) ::= .                                {A = 0;}
 selcollist(A) ::= STAR.                      {A = 0;}
 selcollist(A) ::= sclp(P) expr(X).           {A = sqliteExprListAppend(P,X,0);}
-selcollist(A) ::= sclp(P) expr(X) as id(Y).  {A = sqliteExprListAppend(P,X,&Y);}
+selcollist(A) ::= sclp(P) expr(X) as id(Y).  {A = sqliteExprListAppend(P,X,Y);}
 as ::= .
 as ::= AS.
 
@@ -188,10 +188,10 @@ as ::= AS.
 from(A) ::= FROM seltablist(X).               {A = X;}
 stl_prefix(A) ::= seltablist(X) COMMA.        {A = X;}
 stl_prefix(A) ::= .                           {A = 0;}
-seltablist(A) ::= stl_prefix(X) id(Y).        {A = sqliteIdListAppend(X,&Y);}
+seltablist(A) ::= stl_prefix(X) id(Y).        {A = sqliteIdListAppend(X,Y);}
 seltablist(A) ::= stl_prefix(X) id(Y) as id(Z).
-   {A = sqliteIdListAppend(X,&Y);
-    sqliteIdListAddAlias(A,&Z);}
+   {A = sqliteIdListAppend(X,Y);
+    sqliteIdListAddAlias(A,Z);}
 
 %type orderby_opt {ExprList}
 %destructor orderby_opt {sqliteExprListDelete($$);}
@@ -230,7 +230,7 @@ having_opt(A) ::= HAVING expr(X).  {A = X;}
 
 
 cmd ::= DELETE FROM id(X) where_opt(Y).
-    {sqliteDeleteFrom(pParse, &X, Y);}
+    {sqliteDeleteFrom(pParse, X, Y);}
 
 %type where_opt {Expr}
 %destructor where_opt {sqliteExprDelete($$);}
@@ -242,16 +242,16 @@ where_opt(A) ::= WHERE expr(X).       {A = X;}
 %destructor setlist {sqliteExprListDelete($$);}
 
 cmd ::= UPDATE id(X) SET setlist(Y) where_opt(Z).
-    {sqliteUpdate(pParse,&X,Y,Z);}
+    {sqliteUpdate(pParse,X,Y,Z);}
 
 setlist(A) ::= setlist(Z) COMMA id(X) EQ expr(Y).
-    {A = sqliteExprListAppend(Z,Y,&X);}
-setlist(A) ::= id(X) EQ expr(Y).   {A = sqliteExprListAppend(0,Y,&X);}
+    {A = sqliteExprListAppend(Z,Y,X);}
+setlist(A) ::= id(X) EQ expr(Y).   {A = sqliteExprListAppend(0,Y,X);}
 
 cmd ::= INSERT INTO id(X) inscollist_opt(F) VALUES LP itemlist(Y) RP.
-               {sqliteInsert(pParse, &X, Y, 0, F);}
+               {sqliteInsert(pParse, X, Y, 0, F);}
 cmd ::= INSERT INTO id(X) inscollist_opt(F) select(S).
-               {sqliteInsert(pParse, &X, 0, S, F);}
+               {sqliteInsert(pParse, X, 0, S, F);}
 
 
 %type itemlist {ExprList}
@@ -261,19 +261,19 @@ cmd ::= INSERT INTO id(X) inscollist_opt(F) select(S).
 
 itemlist(A) ::= itemlist(X) COMMA item(Y).  {A = sqliteExprListAppend(X,Y,0);}
 itemlist(A) ::= item(X).     {A = sqliteExprListAppend(0,X,0);}
-item(A) ::= INTEGER(X).      {A = sqliteExpr(TK_INTEGER, 0, 0, &X);}
-item(A) ::= PLUS INTEGER(X). {A = sqliteExpr(TK_INTEGER, 0, 0, &X);}
+item(A) ::= INTEGER(X).      {A = sqliteExpr(TK_INTEGER, 0, 0, X);}
+item(A) ::= PLUS INTEGER(X). {A = sqliteExpr(TK_INTEGER, 0, 0, X);}
 item(A) ::= MINUS INTEGER(X). {
   A = sqliteExpr(TK_UMINUS, 0, 0, 0);
-  A.pLeft = sqliteExpr(TK_INTEGER, 0, 0, &X);
+  A.pLeft = sqliteExpr(TK_INTEGER, 0, 0, X);
 }
-item(A) ::= FLOAT(X).        {A = sqliteExpr(TK_FLOAT, 0, 0, &X);}
-item(A) ::= PLUS FLOAT(X).   {A = sqliteExpr(TK_FLOAT, 0, 0, &X);}
+item(A) ::= FLOAT(X).        {A = sqliteExpr(TK_FLOAT, 0, 0, X);}
+item(A) ::= PLUS FLOAT(X).   {A = sqliteExpr(TK_FLOAT, 0, 0, X);}
 item(A) ::= MINUS FLOAT(X).  {
   A = sqliteExpr(TK_UMINUS, 0, 0, 0);
-  A.pLeft = sqliteExpr(TK_FLOAT, 0, 0, &X);
+  A.pLeft = sqliteExpr(TK_FLOAT, 0, 0, X);
 }
-item(A) ::= STRING(X).       {A = sqliteExpr(TK_STRING, 0, 0, &X);}
+item(A) ::= STRING(X).       {A = sqliteExpr(TK_STRING, 0, 0, X);}
 item(A) ::= NULL.            {A = sqliteExpr(TK_NULL, 0, 0, 0);}
 
 %type inscollist_opt {IdList}
@@ -283,8 +283,8 @@ item(A) ::= NULL.            {A = sqliteExpr(TK_NULL, 0, 0, 0);}
 
 inscollist_opt(A) ::= .                      {A = 0;}
 inscollist_opt(A) ::= LP inscollist(X) RP.   {A = X;}
-inscollist(A) ::= inscollist(X) COMMA id(Y). {A = sqliteIdListAppend(X,&Y);}
-inscollist(A) ::= id(Y).                     {A = sqliteIdListAppend(0,&Y);}
+inscollist(A) ::= inscollist(X) COMMA id(Y). {A = sqliteIdListAppend(X,Y);}
+inscollist(A) ::= id(Y).                     {A = sqliteIdListAppend(0,Y);}
 
 %left OR.
 %left AND.
@@ -299,24 +299,24 @@ inscollist(A) ::= id(Y).                     {A = sqliteIdListAppend(0,&Y);}
 %type expr {Expr}
 %destructor expr {sqliteExprDelete($$);}
 
-expr(A) ::= LP(B) expr(X) RP(E). {A = X; sqliteExprSpan(A,&B,&E);}
-expr(A) ::= ID(X).               {A = sqliteExpr(TK_ID, 0, 0, &X);}
-expr(A) ::= NULL(X).             {A = sqliteExpr(TK_NULL, 0, 0, &X);}
+expr(A) ::= LP(B) expr(X) RP(E). {A = X; sqliteExprSpan(A,B,E);}
+expr(A) ::= ID(X).               {A = sqliteExpr(TK_ID, 0, 0, X);}
+expr(A) ::= NULL(X).             {A = sqliteExpr(TK_NULL, 0, 0, X);}
 expr(A) ::= id(X) DOT id(Y). {
-  Expr temp1 = sqliteExpr(TK_ID, 0, 0, &X);
-  Expr temp2 = sqliteExpr(TK_ID, 0, 0, &Y);
+  Expr temp1 = sqliteExpr(TK_ID, 0, 0, X);
+  Expr temp2 = sqliteExpr(TK_ID, 0, 0, Y);
   A = sqliteExpr(TK_DOT, temp1, temp2, 0);
 }
-expr(A) ::= INTEGER(X).      {A = sqliteExpr(TK_INTEGER, 0, 0, &X);}
-expr(A) ::= FLOAT(X).        {A = sqliteExpr(TK_FLOAT, 0, 0, &X);}
-expr(A) ::= STRING(X).       {A = sqliteExpr(TK_STRING, 0, 0, &X);}
+expr(A) ::= INTEGER(X).      {A = sqliteExpr(TK_INTEGER, 0, 0, X);}
+expr(A) ::= FLOAT(X).        {A = sqliteExpr(TK_FLOAT, 0, 0, X);}
+expr(A) ::= STRING(X).       {A = sqliteExpr(TK_STRING, 0, 0, X);}
 expr(A) ::= ID(X) LP exprlist(Y) RP(E). {
-  A = sqliteExprFunction(Y, &X);
-  sqliteExprSpan(A,&X,&E);
+  A = sqliteExprFunction(Y, X);
+  sqliteExprSpan(A,X,E);
 }
 expr(A) ::= ID(X) LP STAR RP(E). {
-  A = sqliteExprFunction(0, &X);
-  sqliteExprSpan(A,&X,&E);
+  A = sqliteExprFunction(0, X);
+  sqliteExprSpan(A,X,E);
 }
 expr(A) ::= expr(X) AND expr(Y).   {A = sqliteExpr(TK_AND, X, Y, 0);}
 expr(A) ::= expr(X) OR expr(Y).    {A = sqliteExpr(TK_OR, X, Y, 0);}
@@ -330,13 +330,13 @@ expr(A) ::= expr(X) LIKE expr(Y).  {A = sqliteExpr(TK_LIKE, X, Y, 0);}
 expr(A) ::= expr(X) NOT LIKE expr(Y).  {
   A = sqliteExpr(TK_LIKE, X, Y, 0);
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X.span,&Y.span);
+  sqliteExprSpan(A,X.span,Y.span);
 }
 expr(A) ::= expr(X) GLOB expr(Y).  {A = sqliteExpr(TK_GLOB,X,Y,0);}
 expr(A) ::= expr(X) NOT GLOB expr(Y).  {
   A = sqliteExpr(TK_GLOB, X, Y, 0);
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X.span,&Y.span);
+  sqliteExprSpan(A,X.span,Y.span);
 }
 expr(A) ::= expr(X) PLUS expr(Y).  {A = sqliteExpr(TK_PLUS, X, Y, 0);}
 expr(A) ::= expr(X) MINUS expr(Y). {A = sqliteExpr(TK_MINUS, X, Y, 0);}
@@ -345,35 +345,35 @@ expr(A) ::= expr(X) SLASH expr(Y). {A = sqliteExpr(TK_SLASH, X, Y, 0);}
 expr(A) ::= expr(X) CONCAT expr(Y). {A = sqliteExpr(TK_CONCAT, X, Y, 0);}
 expr(A) ::= expr(X) ISNULL(E). {
   A = sqliteExpr(TK_ISNULL, X, 0, 0);
-  sqliteExprSpan(A,&X.span,&E);
+  sqliteExprSpan(A,X.span,E);
 }
 expr(A) ::= expr(X) NOTNULL(E). {
   A = sqliteExpr(TK_NOTNULL, X, 0, 0);
-  sqliteExprSpan(A,&X.span,&E);
+  sqliteExprSpan(A,X.span,E);
 }
 expr(A) ::= NOT(B) expr(X). {
   A = sqliteExpr(TK_NOT, X, 0, 0);
-  sqliteExprSpan(A,&B,&X.span);
+  sqliteExprSpan(A,B,X.span);
 }
 expr(A) ::= MINUS(B) expr(X). [UMINUS] {
   A = sqliteExpr(TK_UMINUS, X, 0, 0);
-  sqliteExprSpan(A,&B,&X.span);
+  sqliteExprSpan(A,B,X.span);
 }
 expr(A) ::= PLUS(B) expr(X). [UMINUS] {
   A = X;
-  sqliteExprSpan(A,&B,&X.span);
+  sqliteExprSpan(A,B,X.span);
 }
 expr(A) ::= LP(B) select(X) RP(E). {
   A = sqliteExpr(TK_SELECT, 0, 0, 0);
   A.pSelect = X;
-  sqliteExprSpan(A,&B,&E);
+  sqliteExprSpan(A,B,E);
 }
 expr(A) ::= expr(W) BETWEEN expr(X) AND expr(Y). {
   ExprList pList = sqliteExprListAppend(0, X, 0);
   pList = sqliteExprListAppend(pList, Y, 0);
   A = sqliteExpr(TK_BETWEEN, W, 0, 0);
   A.pList = pList;
-  sqliteExprSpan(A,&W.span,&Y.span);
+  sqliteExprSpan(A,W.span,Y.span);
 }
 expr(A) ::= expr(W) NOT BETWEEN expr(X) AND expr(Y). {
   ExprList pList = sqliteExprListAppend(0, X, 0);
@@ -381,29 +381,29 @@ expr(A) ::= expr(W) NOT BETWEEN expr(X) AND expr(Y). {
   A = sqliteExpr(TK_BETWEEN, W, 0, 0);
   A.pList = pList;
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&W.span,&Y.span);
+  sqliteExprSpan(A,W.span,Y.span);
 }
 expr(A) ::= expr(X) IN LP exprlist(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
   A.pList = Y;
-  sqliteExprSpan(A,&X.span,&E);
+  sqliteExprSpan(A,X.span,E);
 }
 expr(A) ::= expr(X) IN LP select(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
   A.pSelect = Y;
-  sqliteExprSpan(A,&X.span,&E);
+  sqliteExprSpan(A,X.span,E);
 }
 expr(A) ::= expr(X) NOT IN LP exprlist(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
   A.pList = Y;
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X.span,&E);
+  sqliteExprSpan(A,X.span,E);
 }
 expr(A) ::= expr(X) NOT IN LP select(Y) RP(E).  {
   A = sqliteExpr(TK_IN, X, 0, 0);
   A.pSelect = Y;
   A = sqliteExpr(TK_NOT, A, 0, 0);
-  sqliteExprSpan(A,&X.span,&E);
+  sqliteExprSpan(A,X.span,E);
 }
 
 
@@ -421,7 +421,7 @@ expritem(A) ::= .                       {A = 0;}
 
 
 cmd ::= CREATE(S) uniqueflag INDEX id(X) ON id(Y) LP idxlist(Z) RP(E).
-    {sqliteCreateIndex(pParse, &X, &Y, Z, &S, &E);}
+    {sqliteCreateIndex(pParse, X, Y, Z, S, E);}
 uniqueflag ::= UNIQUE.
 uniqueflag ::= .
 
@@ -430,17 +430,17 @@ uniqueflag ::= .
 %type idxitem {Token}
 
 idxlist(A) ::= idxlist(X) COMMA idxitem(Y).
-     {A = sqliteIdListAppend(X,&Y);}
+     {A = sqliteIdListAppend(X,Y);}
 idxlist(A) ::= idxitem(Y).
-     {A = sqliteIdListAppend(0,&Y);}
+     {A = sqliteIdListAppend(0,Y);}
 idxitem(A) ::= id(X).           {A = X;}
 
-cmd ::= DROP INDEX id(X).       {sqliteDropIndex(pParse, &X);}
+cmd ::= DROP INDEX id(X).       {sqliteDropIndex(pParse, X);}
 
 cmd ::= COPY id(X) FROM id(Y) USING DELIMITERS STRING(Z).
-    {sqliteCopy(pParse,&X,&Y,&Z);}
+    {sqliteCopy(pParse,X,Y,Z);}
 cmd ::= COPY id(X) FROM id(Y).
-    {sqliteCopy(pParse,&X,&Y,0);}
+    {sqliteCopy(pParse,X,Y,0);}
 
 cmd ::= VACUUM.                {sqliteVacuum(pParse,0);}
-cmd ::= VACUUM id(X).          {sqliteVacuum(pParse,&X);}
+cmd ::= VACUUM id(X).          {sqliteVacuum(pParse,X);}
