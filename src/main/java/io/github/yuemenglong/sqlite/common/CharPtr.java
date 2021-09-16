@@ -120,6 +120,10 @@ public class CharPtr {
     pos = x.pos;
   }
 
+  public void update(String x) {
+    update(new CharPtr(x));
+  }
+
   public int strlen() {
     for (int i = pos; i < cs.length; i++) {
       if (cs[i] == 0) return i;
