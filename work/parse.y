@@ -30,15 +30,13 @@
 */
 %token_prefix TK_
 %token_type {Token}
-%extra_argument {Parse *pParse}
+%extra_argument {Parse pParse}
 %syntax_error {
   sqliteSetString(&pParse->zErrMsg,"syntax error",0);
   pParse->sErrToken = TOKEN;
 }
-%name sqliteParser
+%name Parser
 %include {
-#include "sqliteInt.h"
-#include "parse.h"
 }
 
 
@@ -134,9 +132,9 @@ cmd ::= select(X).  {
   sqliteSelectDelete(X);
 }
 
-%type select {Select*}
+%type select {Select}
 %destructor select {sqliteSelectDelete($$);}
-%type oneselect {Select*}
+%type oneselect {Select}
 %destructor oneselect {sqliteSelectDelete($$);}
 
 select(A) ::= oneselect(X).                      {A = X;}
@@ -167,9 +165,9 @@ distinct(A) ::= .           {A = 0;}
 // values of the SELECT statement.  In the case of "SELECT * FROM ..."
 // the selcollist value is NULL.
 //
-%type selcollist {ExprList*}
+%type selcollist {ExprList}
 %destructor selcollist {sqliteExprListDelete($$);}
-%type sclp {ExprList*}
+%type sclp {ExprList}
 %destructor sclp {sqliteExprListDelete($$);}
 sclp(A) ::= selcollist(X) COMMA.             {A = X;}
 sclp(A) ::= .                                {A = 0;}
@@ -180,11 +178,11 @@ as ::= .
 as ::= AS.
 
 
-%type seltablist {IdList*}
+%type seltablist {IdList}
 %destructor seltablist {sqliteIdListDelete($$);}
-%type stl_prefix {IdList*}
+%type stl_prefix {IdList}
 %destructor stl_prefix {sqliteIdListDelete($$);}
-%type from {IdList*}
+%type from {IdList}
 %destructor from {sqliteIdListDelete($$);}
 
 from(A) ::= FROM seltablist(X).               {A = X;}
@@ -195,11 +193,11 @@ seltablist(A) ::= stl_prefix(X) id(Y) as id(Z).
    {A = sqliteIdListAppend(X,&Y);
     sqliteIdListAddAlias(A,&Z);}
 
-%type orderby_opt {ExprList*}
+%type orderby_opt {ExprList}
 %destructor orderby_opt {sqliteExprListDelete($$);}
-%type sortlist {ExprList*}
+%type sortlist {ExprList}
 %destructor sortlist {sqliteExprListDelete($$);}
-%type sortitem {Expr*}
+%type sortitem {Expr}
 %destructor sortitem {sqliteExprDelete($$);}
 
 orderby_opt(A) ::= .                          {A = 0;}
@@ -220,12 +218,12 @@ sortorder(A) ::= ASC.      {A = 0;}
 sortorder(A) ::= DESC.     {A = 1;}
 sortorder(A) ::= .         {A = 0;}
 
-%type groupby_opt {ExprList*}
+%type groupby_opt {ExprList}
 %destructor groupby_opt {sqliteExprListDelete($$);}
 groupby_opt(A) ::= .                      {A = 0;}
 groupby_opt(A) ::= GROUP BY exprlist(X).  {A = X;}
 
-%type having_opt {Expr*}
+%type having_opt {Expr}
 %destructor having_opt {sqliteExprDelete($$);}
 having_opt(A) ::= .                {A = 0;}
 having_opt(A) ::= HAVING expr(X).  {A = X;}
@@ -234,13 +232,13 @@ having_opt(A) ::= HAVING expr(X).  {A = X;}
 cmd ::= DELETE FROM id(X) where_opt(Y).
     {sqliteDeleteFrom(pParse, &X, Y);}
 
-%type where_opt {Expr*}
+%type where_opt {Expr}
 %destructor where_opt {sqliteExprDelete($$);}
 
 where_opt(A) ::= .                    {A = 0;}
 where_opt(A) ::= WHERE expr(X).       {A = X;}
 
-%type setlist {ExprList*}
+%type setlist {ExprList}
 %destructor setlist {sqliteExprListDelete($$);}
 
 cmd ::= UPDATE id(X) SET setlist(Y) where_opt(Z).
@@ -256,9 +254,9 @@ cmd ::= INSERT INTO id(X) inscollist_opt(F) select(S).
                {sqliteInsert(pParse, &X, 0, S, F);}
 
 
-%type itemlist {ExprList*}
+%type itemlist {ExprList}
 %destructor itemlist {sqliteExprListDelete($$);}
-%type item {Expr*}
+%type item {Expr}
 %destructor item {sqliteExprDelete($$);}
 
 itemlist(A) ::= itemlist(X) COMMA item(Y).  {A = sqliteExprListAppend(X,Y,0);}
@@ -278,9 +276,9 @@ item(A) ::= MINUS FLOAT(X).  {
 item(A) ::= STRING(X).       {A = sqliteExpr(TK_STRING, 0, 0, &X);}
 item(A) ::= NULL.            {A = sqliteExpr(TK_NULL, 0, 0, 0);}
 
-%type inscollist_opt {IdList*}
+%type inscollist_opt {IdList}
 %destructor inscollist_opt {sqliteIdListDelete($$);}
-%type inscollist {IdList*}
+%type inscollist {IdList}
 %destructor inscollist {sqliteIdListDelete($$);}
 
 inscollist_opt(A) ::= .                      {A = 0;}
@@ -298,15 +296,15 @@ inscollist(A) ::= id(Y).                     {A = sqliteIdListAppend(0,&Y);}
 %left CONCAT.
 %right UMINUS.
 
-%type expr {Expr*}
+%type expr {Expr}
 %destructor expr {sqliteExprDelete($$);}
 
 expr(A) ::= LP(B) expr(X) RP(E). {A = X; sqliteExprSpan(A,&B,&E);}
 expr(A) ::= ID(X).               {A = sqliteExpr(TK_ID, 0, 0, &X);}
 expr(A) ::= NULL(X).             {A = sqliteExpr(TK_NULL, 0, 0, &X);}
 expr(A) ::= id(X) DOT id(Y). {
-  Expr *temp1 = sqliteExpr(TK_ID, 0, 0, &X);
-  Expr *temp2 = sqliteExpr(TK_ID, 0, 0, &Y);
+  Expr temp1 = sqliteExpr(TK_ID, 0, 0, &X);
+  Expr temp2 = sqliteExpr(TK_ID, 0, 0, &Y);
   A = sqliteExpr(TK_DOT, temp1, temp2, 0);
 }
 expr(A) ::= INTEGER(X).      {A = sqliteExpr(TK_INTEGER, 0, 0, &X);}
@@ -371,14 +369,14 @@ expr(A) ::= LP(B) select(X) RP(E). {
   sqliteExprSpan(A,&B,&E);
 }
 expr(A) ::= expr(W) BETWEEN expr(X) AND expr(Y). {
-  ExprList *pList = sqliteExprListAppend(0, X, 0);
+  ExprList pList = sqliteExprListAppend(0, X, 0);
   pList = sqliteExprListAppend(pList, Y, 0);
   A = sqliteExpr(TK_BETWEEN, W, 0, 0);
   A->pList = pList;
   sqliteExprSpan(A,&W->span,&Y->span);
 }
 expr(A) ::= expr(W) NOT BETWEEN expr(X) AND expr(Y). {
-  ExprList *pList = sqliteExprListAppend(0, X, 0);
+  ExprList pList = sqliteExprListAppend(0, X, 0);
   pList = sqliteExprListAppend(pList, Y, 0);
   A = sqliteExpr(TK_BETWEEN, W, 0, 0);
   A->pList = pList;
@@ -410,9 +408,9 @@ expr(A) ::= expr(X) NOT IN LP select(Y) RP(E).  {
 
 
 
-%type exprlist {ExprList*}
+%type exprlist {ExprList}
 %destructor exprlist {sqliteExprListDelete($$);}
-%type expritem {Expr*}
+%type expritem {Expr}
 %destructor expritem {sqliteExprDelete($$);}
 
 exprlist(A) ::= exprlist(X) COMMA expritem(Y).
@@ -427,7 +425,7 @@ cmd ::= CREATE(S) uniqueflag INDEX id(X) ON id(Y) LP idxlist(Z) RP(E).
 uniqueflag ::= UNIQUE.
 uniqueflag ::= .
 
-%type idxlist {IdList*}
+%type idxlist {IdList}
 %destructor idxlist {sqliteIdListDelete($$);}
 %type idxitem {Token}
 
