@@ -6,9 +6,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.function.Consumer;
 
-import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_FFLAG;
-import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_FLAG;
 import static io.github.yuemenglong.sqlite.common.Util.*;
+import static io.github.yuemenglong.sqlite.lemon.Options.Type.*;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class Options {
@@ -197,7 +196,7 @@ public class Options {
           ((Consumer) (op[j].arg.get())).accept(lv);
           break;
         case OPT_STR:
-          op[j].arg.set(sv);
+          op[j].arg.set(argv[i].substring(sv));
           break;
         case OPT_FSTR:
           ((Consumer) (op[j].arg.get())).accept(sv);
@@ -217,7 +216,7 @@ public class Options {
       for (i = 1; i < argv.length; i++) {
         if (argv[i].charAt(0) == '+' || argv[i].charAt(0) == '-') {
           errcnt += handleflags(i, err);
-        } else if (strchr(argv[i], '=') != 0) {
+        } else if (strchr(argv[i], '=') > 0) {
           errcnt += handleswitch(i, err);
         }
       }

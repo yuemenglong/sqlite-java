@@ -481,6 +481,10 @@ public class Report {
     OutputStream out0 = fileOpenWrite(lemp, ".java");
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     lineno.set(1);
+
+    String clazz = lemp.clazz != null ? lemp.clazz : "Test";
+    Replacer.regist("_CLASS_NAME",clazz);
+
     BufferedReader br = new BufferedReader(new InputStreamReader(in));
     tpltXfer(lemp.name, br, out, plineno);
     tpltPrint(out, lemp, lemp.include, lemp.includeln, plineno);

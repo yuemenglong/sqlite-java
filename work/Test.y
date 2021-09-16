@@ -1,5 +1,5 @@
 %token_prefix TK_
-%extra_argument {Parse pParse}
+%extra_argument {Object pParse}
 %include {
 }
 

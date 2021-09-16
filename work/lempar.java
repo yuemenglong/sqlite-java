@@ -26,7 +26,7 @@ package work;
 import java.io.IOException;
 import java.io.OutputStream;
 
-class lemon {
+class _CLASS_NAME {
 /* First off, code is include which follows the "include" declaration
 ** in the input file. */
 //#include <stdio.h>

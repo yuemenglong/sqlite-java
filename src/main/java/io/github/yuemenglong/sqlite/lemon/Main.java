@@ -6,9 +6,11 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_FLAG;
 import static io.github.yuemenglong.sqlite.common.Util.isupper;
+import static io.github.yuemenglong.sqlite.lemon.Options.Type.OPT_STR;
 import static java.lang.System.exit;
 
 public class Main {
@@ -23,6 +25,7 @@ public class Main {
     AtomicInteger quiet = new AtomicInteger();
     AtomicInteger statistics = new AtomicInteger();
     AtomicInteger mhflag = new AtomicInteger();
+    AtomicReference<String> clazz = new AtomicReference<>(null);
     Options[] options = new Options[]{
             new Options(OPT_FLAG, "b", new Addr<>(basisflag::get, v -> basisflag.set((int) v)), "Print only the basis in report."),
             new Options(OPT_FLAG, "c", new Addr<>(compress::get, v -> compress.set((int) v)), "Don't compress the action table."),
@@ -31,6 +34,7 @@ public class Main {
             new Options(OPT_FLAG, "q", new Addr<>(quiet::get, v -> quiet.set((int) v)), "(Quiet) Don't print the report file."),
             new Options(OPT_FLAG, "s", new Addr<>(statistics::get, v -> statistics.set((int) v)), "Print parser stats to standard output."),
             new Options(OPT_FLAG, "x", new Addr<>(version::get, v -> version.set((int) v)), "Print the version number."),
+            new Options(OPT_STR, "z", new Addr<>(clazz::get, v -> clazz.set((String) v)), "Print the version number."),
             new Options(OPT_FLAG, null, null, null)
     };
     int i;
@@ -54,6 +58,7 @@ public class Main {
     Strsafe.init();
     Symbol.init();
     State.init();
+    lem.clazz = clazz.get();
     lem.argv0 = argv[0];
     lem.filename = Options.optArg(0);
     lem.basisflag = basisflag.get();

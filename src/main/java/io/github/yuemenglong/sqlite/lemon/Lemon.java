@@ -1,6 +1,7 @@
 package io.github.yuemenglong.sqlite.lemon;
 
 public class Lemon {
+  public String clazz;
   public State[] sorted;   /* Table of states sorted by state number */
   public Rule rule;       /* List of all rules */
   public int nstate;              /* Number of states */

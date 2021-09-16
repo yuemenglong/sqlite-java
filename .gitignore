@@ -1,7 +1,7 @@
 .idea/
 sqlite.iml
 target/
-/work/lemon.c
-/work/lemon.h
-/work/lemon.out
-/work/lemon.java
+/work/*.c
+/work/*.h
+/work/*.out
+/work/*.java

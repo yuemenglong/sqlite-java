@@ -15,10 +15,10 @@ public class LemonRun {
   }
 
   public static void main(String[] args) throws IOException {
-    System.out.println(getPath("work/lemon.y"));
-    Main.main(new String[]{getPath("work/lemon.y")});
-    FileInputStream is = new FileInputStream(getPath("work/lemon.java"));
-    FileOutputStream os = new FileOutputStream(getPath("src/main/java/work/lemon.java"));
+    System.out.println(getPath("work/Test.y"));
+    Main.main(new String[]{getPath("work/Test.y")});
+    FileInputStream is = new FileInputStream(getPath("work/Test.java"));
+    FileOutputStream os = new FileOutputStream(getPath("src/main/java/work/Test.java"));
     BufferedReader br = new BufferedReader(new InputStreamReader(is));
     String line;
     while ((line = br.readLine()) != null) {
