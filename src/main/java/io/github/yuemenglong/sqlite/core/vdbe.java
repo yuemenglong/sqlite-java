@@ -1019,7 +1019,7 @@ public class vdbe {
       zP2.sprintf("%d", p.aOp[i].p2);
       azValue[4] = p.aOp[i].p3;
       azValue[1] = new CharPtr(zOpName[p.aOp[i].opcode]);
-      if (xCallback.call(pArg, 5, new Ptr<>(azValue), azColumnNames) != 0) {
+      if (xCallback.call(pArg, 5, new Ptr<>(azValue), new Ptr<>(azColumnNames)) != 0) {
         rc = SQLITE_ABORT;
       }
     }
@@ -1308,7 +1308,7 @@ public class vdbe {
           }
           p.zStack[p.tos + 1] = null;
           if (xCallback != null) {
-            if (xCallback.call(pArg, pOp.p1, new Ptr<>(p.zStack).ptr(i), p.azColName) != 0) {
+            if (xCallback.call(pArg, pOp.p1, new Ptr<>(p.zStack).ptr(i), new Ptr<>(p.azColName)) != 0) {
               rc.set(SQLITE_ABORT);
             }
           }
@@ -2917,7 +2917,7 @@ public class vdbe {
             if (xCallback.call(pArg, pOp.p1,
                     new Ptr<>(p.zStack).ptr(i),
 //                    ( char**)p.zStack[i],
-                    p.azColName) != 0) {
+                    new Ptr<>(p.azColName)) != 0) {
               rc.set(SQLITE_ABORT);
             }
           }

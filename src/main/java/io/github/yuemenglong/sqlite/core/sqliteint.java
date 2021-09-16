@@ -186,7 +186,7 @@ public class sqliteint {
   //*/
 
   public interface sqlite_callback {
-    int call(Object obj, int n, Ptr<CharPtr> sa, CharPtr[] sb);
+    int call(Object obj, int n, Ptr<CharPtr> sa, Ptr<CharPtr> sb);
   }
 
   public static class Parse {

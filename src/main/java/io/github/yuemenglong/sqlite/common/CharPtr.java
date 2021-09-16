@@ -107,6 +107,10 @@ public class CharPtr {
     cs[pos + n] = (char) c;
   }
 
+  public int strcmp(String x) {
+    return strcmp(new CharPtr(x));
+  }
+
   public int strcmp(CharPtr x) {
     return toZeroString().compareTo(x.toZeroString());
   }
@@ -133,6 +137,10 @@ public class CharPtr {
 
   public int memsize() {
     return cs.length;
+  }
+
+  public void strcpy(String p) {
+    strcpy(new CharPtr(p));
   }
 
   public void strcpy(CharPtr p) {

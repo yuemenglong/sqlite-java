@@ -1,6 +1,7 @@
 package io.github.yuemenglong.sqlite.common;
 
 import java.io.File;
+import java.lang.reflect.Array;
 
 public class Util {
   public static boolean islower(int c) {
@@ -59,8 +60,16 @@ public class Util {
     return str.indexOf(c);
   }
 
+  public static int ArraySize(Object obj) {
+    return Array.getLength(obj);
+  }
+
   public static String getenv(String key) {
     return System.getenv(key);
+  }
+
+  public static int strlen(CharPtr s) {
+    return s.strlen();
   }
 
   public static int strlen(String s) {
@@ -98,5 +107,35 @@ public class Util {
 
   public static void unlink(String path) {
     new File(path).delete();
+  }
+
+  public static void strcpy(CharPtr a, String b) {
+    a.strcpy(b);
+  }
+
+  public static void strcpy(CharPtr a, CharPtr b) {
+    a.strcpy(b);
+  }
+
+  //realloc(zSql, nSql + len + 2);
+  public static CharPtr realloc(CharPtr s, int n) {
+    s.realloc(n);
+    return s;
+  }
+
+  //  fprintf(stderr, "%s: out of memory!\n", argv0);
+  public static void fprintf(FILE file, String format, Object... args) {
+    file.fprintf(format, args);
+  }
+
+  public static FILE stderr() {
+    return FILE.stderr();
+  }
+
+  public static void free(Object o) {
+  }
+
+  public static void printf(String fmt, Object... args) {
+    System.out.printf(fmt, args);
   }
 }

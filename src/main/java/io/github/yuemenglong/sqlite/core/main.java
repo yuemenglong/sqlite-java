@@ -29,7 +29,7 @@ public class main {
    ** contained in argv[1].  Typical meta information is the file format
    ** version.
    */
-  public static int sqliteOpenCb(Object pDb, int argc, Ptr<CharPtr> argv, CharPtr[] azColName) {
+  public static int sqliteOpenCb(Object pDb, int argc, Ptr<CharPtr> argv, Ptr<CharPtr> azColName) {
     sqlite db = (sqlite) pDb;
     Parse sParse = new Parse();
     int nErr;
