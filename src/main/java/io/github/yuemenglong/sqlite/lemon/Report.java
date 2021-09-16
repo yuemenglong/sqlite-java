@@ -483,7 +483,8 @@ public class Report {
     lineno.set(1);
 
     String clazz = lemp.clazz != null ? lemp.clazz : "Test";
-    Replacer.regist("_CLASS_NAME",clazz);
+    Replacer.regist("_CLASS_NAME", clazz);
+    Replacer.regist("TOKEN", "(yyminor.yy0)");
 
     BufferedReader br = new BufferedReader(new InputStreamReader(in));
     tpltXfer(lemp.name, br, out, plineno);

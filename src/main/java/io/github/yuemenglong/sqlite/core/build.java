@@ -80,11 +80,20 @@ public class build {
   /*
    ** Construct a new expression node and return a pointer to it.
    */
+  public static Expr sqliteExpr(int op, int pLeft, int pRight, Token pToken) {
+    return sqliteExpr(op, null, null, pToken);
+  }
+
   public static Expr sqliteExpr(int op, int pLeft, int pRight, int pToken) {
-    Assert.assertTrue(pLeft == 0);
-    Assert.assertTrue(pRight == 0);
-    Assert.assertTrue(pToken == 0);
     return sqliteExpr(op, null, null, null);
+  }
+
+  public static Expr sqliteExpr(int op, Expr pLeft, Expr pRight, int pToken) {
+    return sqliteExpr(op, pLeft, pRight, null);
+  }
+
+  public static Expr sqliteExpr(int op, Expr pLeft, int pRight, int pToken) {
+    return sqliteExpr(op, pLeft, null, null);
   }
 
   public static Expr sqliteExpr(int op, Expr pLeft, Expr pRight, Token pToken) {
@@ -120,6 +129,10 @@ public class build {
    ** Construct a new expression node for a function with multiple
    ** arguments.
    */
+  public static Expr sqliteExprFunction(int pList, Token pToken) {
+    return sqliteExprFunction(null, pToken);
+  }
+
   public static Expr sqliteExprFunction(ExprList pList, Token pToken) {
     Expr pNew;
     pNew = new Expr();//sqliteMalloc( sizeof(Expr) );
@@ -491,6 +504,28 @@ public class build {
    */
   public static void sqliteCreateIndex(
           Parse pParse,   /* All information about this parse */
+          int pName,    /* Name of the index.  May be NULL */
+          int pTable,   /* Name of the table to index.  Use pParse.pNewTable if 0 */
+          IdList pList,   /* A list of columns to be indexed */
+          int pStart,   /* The CREATE token that begins a CREATE TABLE statement */
+          int pEnd      /* The ")" that closes the CREATE INDEX statement */
+  ) {
+    sqliteCreateIndex(pParse, null, null, pList, null, null);
+  }
+
+  public static void sqliteCreateIndex(
+          Parse pParse,   /* All information about this parse */
+          int pName,    /* Name of the index.  May be NULL */
+          int pTable,   /* Name of the table to index.  Use pParse.pNewTable if 0 */
+          int pList,   /* A list of columns to be indexed */
+          int pStart,   /* The CREATE token that begins a CREATE TABLE statement */
+          int pEnd      /* The ")" that closes the CREATE INDEX statement */
+  ) {
+    sqliteCreateIndex(pParse, null, null, null, null, null);
+  }
+
+  public static void sqliteCreateIndex(
+          Parse pParse,   /* All information about this parse */
           Token pName,    /* Name of the index.  May be NULL */
           Token pTable,   /* Name of the table to index.  Use pParse.pNewTable if 0 */
           IdList pList,   /* A list of columns to be indexed */
@@ -734,6 +769,18 @@ public class build {
    ** Add a new element to the end of an expression list.  If pList is
    ** initially NULL, then create a new expression list.
    */
+  public static ExprList sqliteExprListAppend(ExprList pList, Expr pExpr, int pName) {
+    return sqliteExprListAppend(pList, pExpr, null);
+  }
+
+  public static ExprList sqliteExprListAppend(int pList, Expr pExpr, Token pName) {
+    return sqliteExprListAppend(null, pExpr, pName);
+  }
+
+  public static ExprList sqliteExprListAppend(int pList, Expr pExpr, int pName) {
+    return sqliteExprListAppend(null, pExpr, null);
+  }
+
   public static ExprList sqliteExprListAppend(ExprList pList, Expr pExpr, Token pName) {
     int i;
     if (pList == null) {
@@ -771,6 +818,10 @@ public class build {
    ** Append a new element to the given IdList.  Create a new IdList if
    ** need be.
    */
+  public static IdList sqliteIdListAppend(int pList, Token pToken) {
+    return sqliteIdListAppend(null, pToken);
+  }
+
   public static IdList sqliteIdListAppend(IdList pList, Token pToken) {
     if (pList == null) {
       pList = new IdList();//sqliteMalloc( sizeof(IdList) );
@@ -829,6 +880,15 @@ public class build {
    ** file to fill this table with data.  File might be "stdin".  The optional
    ** delimiter string identifies the field separators.  The default is a tab.
    */
+  public static void sqliteCopy(
+          Parse pParse,       /* The parser context */
+          Token pTableName,   /* The name of the table into which we will insert */
+          Token pFilename,    /* The file from which to obtain information */
+          int pDelimiter    /* Use this as the field delimiter */
+  ) {
+    sqliteCopy(pParse, pTableName, pFilename, null);
+  }
+
   public static void sqliteCopy(
           Parse pParse,       /* The parser context */
           Token pTableName,   /* The name of the table into which we will insert */
@@ -908,6 +968,10 @@ public class build {
    ** collapse free space, etc.  It is modelled after the VACUUM command
    ** in PostgreSQL.
    */
+  public static void sqliteVacuum(Parse pParse, int pTableName) {
+    sqliteVacuum(pParse, null);
+  }
+
   public static void sqliteVacuum(Parse pParse, Token pTableName) {
     CharPtr zName;
     Vdbe v;

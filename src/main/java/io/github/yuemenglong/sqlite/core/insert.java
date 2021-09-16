@@ -35,6 +35,26 @@ public class insert {
           Parse pParse,        /* Parser context */
           Token pTableName,    /* Name of table into which we are inserting */
           ExprList pList,      /* List of values to be inserted */
+          int pSelect,      /* A SELECT statement to use as the data source */
+          IdList pColumn       /* Column names corresponding to IDLIST. */
+  ) {
+    sqliteInsert(pParse, pTableName, pList, null, pColumn);
+  }
+
+  public static void sqliteInsert(
+          Parse pParse,        /* Parser context */
+          Token pTableName,    /* Name of table into which we are inserting */
+          int pList,      /* List of values to be inserted */
+          Select pSelect,      /* A SELECT statement to use as the data source */
+          IdList pColumn       /* Column names corresponding to IDLIST. */
+  ) {
+    sqliteInsert(pParse, pTableName, null, pSelect, pColumn);
+  }
+
+  public static void sqliteInsert(
+          Parse pParse,        /* Parser context */
+          Token pTableName,    /* Name of table into which we are inserting */
+          ExprList pList,      /* List of values to be inserted */
           Select pSelect,      /* A SELECT statement to use as the data source */
           IdList pColumn       /* Column names corresponding to IDLIST. */
   ) {
