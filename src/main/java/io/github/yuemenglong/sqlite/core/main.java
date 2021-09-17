@@ -192,7 +192,7 @@ public class main {
 
     /* Allocate the sqlite data structure */
     db = new sqlite();// sqliteMalloc(sizeof(sqlite));
-    if (pzErrMsg != null) pzErrMsg.update(new CharPtr(1024));
+    if (pzErrMsg != null) pzErrMsg.assign(new CharPtr(1024));
     if (db == null) {
       sqliteSetString(pzErrMsg, "out of memory", 0);
 //      sqliteStrRealloc(pzErrMsg);
@@ -294,7 +294,7 @@ public class main {
     Parse sParse = new Parse();
     int rc;
 
-    if (pzErrMsg != null) pzErrMsg.update(new CharPtr(1024));
+    if (pzErrMsg != null) pzErrMsg.assign(new CharPtr(1024));
     if ((db.flags & SQLITE_Initialized) == 0) {
       rc = sqliteInit(db, pzErrMsg);
       if (rc != SQLITE_OK) return rc;

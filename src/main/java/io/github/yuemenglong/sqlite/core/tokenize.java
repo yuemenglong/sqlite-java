@@ -429,7 +429,7 @@ public class tokenize {
     if (pParse.zErrMsg != null) {
       if (pzErrMsg != null) {
         sqliteFree(pzErrMsg);
-        pzErrMsg.update(pParse.zErrMsg);
+        pzErrMsg.assign(pParse.zErrMsg);
       } else {
         sqliteFree(pParse.zErrMsg);
       }

@@ -199,7 +199,7 @@ public class dbbe {
     int i;
     sqliteSetString(zFile, pBe.zDir, new CharPtr("/"), zTable, new CharPtr(".tbl"));
     for (i = (pBe.zDir.strlen()) + 1; zFile.get(i) != 0; i++) {
-      int c = zFile.get(i);
+      char c = zFile.get(i);
       if (isupper(c)) {
         zFile.set(i, tolower(c));
       } else if (!isalnum(c) && c != '-' && c != '_' && c != '.') {

@@ -322,31 +322,31 @@ public class vdbe {
     FILE trace;        /* Write an execution trace here, if not NULL */
     int nOp;            /* Number of instructions in the program */
     int nOpAlloc;       /* Number of slots allocated for aOp[] */
-    Op[] aOp = new Op[]{};            /* Space to hold the virtual machine's program */
+    Op[] aOp = new Op[0];            /* Space to hold the virtual machine's program */
     int nLabel;         /* Number of labels used */
     int nLabelAlloc;    /* Number of slots allocated in aLabel[] */
-    Integer[] aLabel; /* Space to hold the labels */
+    Integer[] aLabel = new Integer[0]; /* Space to hold the labels */
     int tos;            /* Index of top of stack */
     int nStackAlloc;    /* Size of the stack */
-    Stack[] aStack;      /* The operand stack, except string values */
-    CharPtr[] zStack;      /* Text or binary values of the stack */
-    CharPtr[] azColName;   /* Becomes the 4th parameter to callbacks */
+    Stack[] aStack = new Stack[0];      /* The operand stack, except string values */
+    CharPtr[] zStack = new CharPtr[0];      /* Text or binary values of the stack */
+    CharPtr[] azColName = new CharPtr[0];   /* Becomes the 4th parameter to callbacks */
     int nCursor;        /* Number of slots in aCsr[] */
-    Cursor[] aCsr;       /* On element of this array for each open cursor */
+    Cursor[] aCsr = new Cursor[0];       /* On element of this array for each open cursor */
     int nList;          /* Number of slots in apList[] */
-    FILE[] apList;      /* An open file for each list */
+    FILE[] apList = new FILE[0];      /* An open file for each list */
     int nSort;          /* Number of slots in apSort[] */
-    Sorter[] apSort;    /* An open sorter list */
+    Sorter[] apSort = new Sorter[0];    /* An open sorter list */
     FILE pFile;        /* At most one open file handler */
     int nField;         /* Number of file fields */
-    CharPtr[] azField;     /* Data for each file field */
+    CharPtr[] azField = new CharPtr[0];     /* Data for each file field */
     CharPtr zLine;        /* A single line from the input file */
     int nLineAlloc;     /* Number of spaces allocated for zLine */
     int nMem;           /* Number of memory locations currently allocated */
-    Mem[] aMem;          /* The memory locations */
+    Mem[] aMem = new Mem[0];          /* The memory locations */
     Agg agg;            /* Aggregate information */
     int nSet;           /* Number of sets allocated */
-    Set[] aSet;          /* An array of sets */
+    Set[] aSet = new Set[0];          /* An array of sets */
     int nFetch;         /* Number of OP_Fetch instructions executed */
   }
 

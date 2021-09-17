@@ -119,13 +119,13 @@ public class CharPtr {
     return toZeroString().substring(0, n).compareTo(x.toZeroString().substring(0, n));
   }
 
-  public void update(CharPtr x) {
-    cs = Arrays.copyOf(x.cs, x.cs.length);
+  public void assign(CharPtr x) {
+    cs = x.cs;
     pos = x.pos;
   }
 
-  public void update(String x) {
-    update(new CharPtr(x));
+  public void assign(String x) {
+    assign(new CharPtr(x));
   }
 
   public int strlen() {

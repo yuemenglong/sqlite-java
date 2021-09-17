@@ -1,11 +1,9 @@
 package io.github.yuemenglong.sqlite.core;
 
-import io.github.yuemenglong.sqlite.common.Addr;
 import io.github.yuemenglong.sqlite.common.CharPtr;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static io.github.yuemenglong.sqlite.common.Util.isdigit;
 
@@ -33,7 +31,9 @@ public class util {
       }
       Class<?> clazz = Class.forName(cname);
       for (int i = 0; i < ret.length; i++) {
-        ret[i] = (T) clazz.newInstance();
+        if (ret[i] == null) {
+          ret[i] = (T) clazz.newInstance();
+        }
       }
       return ret;
     } catch (Throwable e) {
@@ -80,7 +80,7 @@ public class util {
       nByte += arg.strlen();
     }
     zResult = new CharPtr(nByte);
-    pz.update(zResult);
+    pz.assign(zResult);
 //    zResult.strcpy(zFirst);
 //    zResult.move(zResult.strlen());
     for (CharPtr arg : args) {
@@ -113,7 +113,7 @@ public class util {
       nByte += n;
     }
     zResult = new CharPtr(nByte + 1);
-    pz.update(zResult);
+    pz.assign(zResult);
     for (int i = 1; i < args.length; i += 2) {
       z = (CharPtr) args[i - 1];
       n = (int) args[i];
